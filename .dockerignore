@@ -1,20 +1,32 @@
-# 忽略不需要打包的文件
+# Git
 .git
 .gitignore
-*.md
-LICENSE
-
-# 数据文件
-data/
-uploads/
-config.yaml
-
-# 开发文件
-.vscode/
-.idea/
-*.log
 
 # 文档
 *.md
 !README.md
 
+# 数据和上传
+data/
+uploads/
+config.yaml
+
+# 构建产物
+mygallery
+bin/
+
+# 临时文件
+*.log
+*.tmp
+/tmp/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# 测试文件
+test-frontend.html
+*.txt

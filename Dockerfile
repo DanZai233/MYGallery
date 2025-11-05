@@ -1,5 +1,5 @@
 # 构建阶段
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,8 @@ RUN go mod download || true
 COPY . .
 
 # 构建应用
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o mygallery .
+ENV GOTOOLCHAIN=auto
+RUN CGO_ENABLED=1 GOOS=linux go build -o mygallery .
 
 # 运行阶段
 FROM alpine:latest

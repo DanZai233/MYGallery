@@ -72,7 +72,7 @@ func InitDB(cfg *config.Config) error {
 	}
 
 	// 自动迁移表结构
-	if err := DB.AutoMigrate(&models.User{}, &models.Photo{}); err != nil {
+	if err := DB.AutoMigrate(&models.User{}, &models.Photo{}, &models.Settings{}, &models.Category{}); err != nil {
 		return fmt.Errorf("数据库迁移失败: %w", err)
 	}
 

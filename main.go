@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/mygallery/mygallery/internal/config"
 	"github.com/mygallery/mygallery/internal/database"

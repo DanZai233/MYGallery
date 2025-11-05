@@ -28,6 +28,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	// 创建 handlers
 	authHandler := handlers.NewAuthHandler(cfg)
 	photoHandler := handlers.NewPhotoHandler(cfg)
+	settingsHandler := handlers.NewSettingsHandler(cfg)
 	
 	// API 路由组
 	api := r.Group("/api")
@@ -45,6 +46,10 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			photos.GET("/:id", photoHandler.GetPhoto)    // 获取单张照片
 		}
 		
+		// 设置相关（公开接口）
+		api.GET("/settings", settingsHandler.GetSettings)
+		api.GET("/categories", settingsHandler.GetCategories)
+		
 		// 需要认证的接口
 		authRequired := api.Group("")
 		authRequired.Use(middleware.AuthMiddleware(cfg))
@@ -56,6 +61,14 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			authRequired.POST("/photos", photoHandler.UploadPhoto)
 			authRequired.PUT("/photos/:id", photoHandler.UpdatePhoto)
 			authRequired.DELETE("/photos/:id", photoHandler.DeletePhoto)
+			
+			// 设置管理
+			authRequired.PUT("/settings", settingsHandler.UpdateSettings)
+			
+			// 分类管理
+			authRequired.POST("/categories", settingsHandler.CreateCategory)
+			authRequired.PUT("/categories/:id", settingsHandler.UpdateCategory)
+			authRequired.DELETE("/categories/:id", settingsHandler.DeleteCategory)
 		}
 	}
 	

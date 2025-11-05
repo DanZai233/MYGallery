@@ -9,7 +9,6 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/rwcarlsen/goexif/exif"
-	"github.com/rwcarlsen/goexif/tiff"
 )
 
 // EXIFData EXIF 数据结构
@@ -82,8 +81,8 @@ func ExtractEXIF(filePath string) (*EXIFData, error) {
 	if focalLen, err := x.Get(exif.FocalLength); err == nil {
 		if val, err := focalLen.Rat(0); err == nil {
 			num, denom := val.Num(), val.Denom()
-			if denom != 0 {
-				exifData.FocalLength = fmt.Sprintf("%.0fmm", float64(num)/float64(denom))
+			if denom.Int64() != 0 {
+				exifData.FocalLength = fmt.Sprintf("%.0fmm", float64(num.Int64())/float64(denom.Int64()))
 			}
 		}
 	}
@@ -92,8 +91,8 @@ func ExtractEXIF(filePath string) (*EXIFData, error) {
 	if fnumber, err := x.Get(exif.FNumber); err == nil {
 		if val, err := fnumber.Rat(0); err == nil {
 			num, denom := val.Num(), val.Denom()
-			if denom != 0 {
-				exifData.Aperture = fmt.Sprintf("f/%.1f", float64(num)/float64(denom))
+			if denom.Int64() != 0 {
+				exifData.Aperture = fmt.Sprintf("f/%.1f", float64(num.Int64())/float64(denom.Int64()))
 			}
 		}
 	}
@@ -102,11 +101,13 @@ func ExtractEXIF(filePath string) (*EXIFData, error) {
 	if expTime, err := x.Get(exif.ExposureTime); err == nil {
 		if val, err := expTime.Rat(0); err == nil {
 			num, denom := val.Num(), val.Denom()
-			if num != 0 && denom != 0 {
-				if num >= denom {
-					exifData.ShutterSpeed = fmt.Sprintf("%.1fs", float64(num)/float64(denom))
+			numInt := num.Int64()
+			denomInt := denom.Int64()
+			if numInt != 0 && denomInt != 0 {
+				if numInt >= denomInt {
+					exifData.ShutterSpeed = fmt.Sprintf("%.1fs", float64(numInt)/float64(denomInt))
 				} else {
-					exifData.ShutterSpeed = fmt.Sprintf("1/%ds", denom/num)
+					exifData.ShutterSpeed = fmt.Sprintf("1/%ds", denomInt/numInt)
 				}
 			}
 		}
@@ -161,12 +162,6 @@ func GenerateThumbnail(srcPath, dstPath string, width, height, quality int) erro
 	return nil
 }
 
-// GetRational 辅助函数：从 tiff.Tag 获取有理数
-func getRational(tag *tiff.Tag, index int) (num, denom int64, err error) {
-	rat, err := tag.Rat(index)
-	if err != nil {
-		return 0, 0, err
-	}
-	return rat.Num(), rat.Denom(), nil
-}
+// GetRational 辅助函数：从 tiff.Tag 获取有理数（已弃用，仅保留作为参考）
+// 注意：rat.Num() 和 rat.Denom() 返回的是 *big.Int 类型，需要使用 .Int64() 方法转换
 

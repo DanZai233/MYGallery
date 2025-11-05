@@ -9,16 +9,63 @@
     <link href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lg-zoom.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lg-thumbnail.min.css" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark-mode {
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #cbd5e0;
+            --glass-bg: rgba(45, 55, 72, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
         .glass-effect {
-            background: rgba(255, 255, 255, 0.25);
+            background: var(--glass-bg);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            border: 1px solid var(--glass-border);
         }
         
         .photo-card {
             break-inside: avoid;
             page-break-inside: avoid;
+            position: relative;
+        }
+        
+        .photo-description {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            color: white;
+            opacity: 0;
+        }
+        
+        .photo-card:hover .photo-description {
+            transform: translateY(0);
+            opacity: 1;
         }
         
         .masonry-grid {
@@ -54,6 +101,23 @@
             0% { background-color: hsl(200, 20%, 80%); }
             100% { background-color: hsl(200, 20%, 95%); }
         }
+        
+        /* lightGallery 毛玻璃效果 */
+        .lg-backdrop {
+            background-color: rgba(0, 0, 0, 0.7) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+        }
+        
+        .lg-outer {
+            backdrop-filter: blur(10px);
+        }
+        
+        .lg-sub-html {
+            background: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
@@ -67,9 +131,9 @@
                 </div>
                 <nav class="hidden md:flex items-center space-x-6">
                     <a href="#" class="text-gray-700 hover:text-blue-600 transition">首页</a>
-                    <a href="/admin" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        后台管理
-                    </a>
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-200 transition" title="切换主题">
+                        <span class="text-2xl">🌙</span>
+                    </button>
                 </nav>
             </div>
         </div>
@@ -199,15 +263,21 @@
             if (photo.shutter_speed) exifInfo.push(photo.shutter_speed);
             if (photo.iso) exifInfo.push(`ISO ${photo.iso}`);
 
+            // 使用完整URL，添加API前缀
+            const imageUrl = photo.url.startsWith('http') ? photo.url : `/uploads/${photo.filename}`;
+            const thumbUrl = photo.thumbnail_url || imageUrl;
+
             card.innerHTML = `
                 <div class="relative overflow-hidden rounded-xl shadow-lg group">
-                    <img src="${photo.thumbnail_url || photo.url}" 
+                    <img src="${thumbUrl}" 
                          alt="${photo.title || photo.original_name}" 
-                         class="w-full h-auto object-cover">
-                    <div class="glass-effect absolute bottom-0 left-0 right-0 p-4 rounded-b-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <h3 class="text-white font-semibold text-lg mb-1">${photo.title || photo.original_name}</h3>
-                        ${exifInfo.length > 0 ? `<p class="text-gray-200 text-sm">${exifInfo.join(' · ')}</p>` : ''}
-                        ${photo.location ? `<p class="text-gray-300 text-xs mt-1">📍 ${photo.location}</p>` : ''}
+                         class="w-full h-auto object-cover"
+                         onerror="this.src='${imageUrl}'">
+                    <div class="photo-description">
+                        <h3 class="font-semibold text-lg mb-1">${photo.title || photo.original_name}</h3>
+                        ${photo.description ? `<p class="text-sm text-gray-200 mb-2">${photo.description}</p>` : ''}
+                        ${exifInfo.length > 0 ? `<p class="text-xs text-gray-300">${exifInfo.join(' · ')}</p>` : ''}
+                        ${photo.location ? `<p class="text-xs text-gray-300 mt-1">📍 ${photo.location}</p>` : ''}
                     </div>
                 </div>
             `;
@@ -259,8 +329,28 @@
             loadPhotos(currentPage);
         }
 
+        // 黑夜模式切换
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.body;
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+                themeToggle.querySelector('span').textContent = '☀️';
+            }
+            
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                const isDark = body.classList.contains('dark-mode');
+                themeToggle.querySelector('span').textContent = isDark ? '☀️' : '🌙';
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            });
+        }
+
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
+            initThemeToggle();
             loadPhotos(1);
         });
     </script>

@@ -27,6 +27,7 @@ func NewPhotoHandler(cfg *config.Config) *PhotoHandler {
 func (h *PhotoHandler) GetPhotos(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	category := c.Query("category")
 	
 	if page < 1 {
 		page = 1
@@ -41,15 +42,23 @@ func (h *PhotoHandler) GetPhotos(c *gin.Context) {
 	var total int64
 	
 	db := database.GetDB()
-	db.Model(&models.Photo{}).Count(&total)
-	db.Offset(offset).Limit(size).Order("created_at DESC").Find(&photos)
+	query := db.Model(&models.Photo{})
+	
+	// 按分类筛选
+	if category != "" {
+		query = query.Where("category = ?", category)
+	}
+	
+	query.Count(&total)
+	query.Offset(offset).Limit(size).Order("created_at DESC").Find(&photos)
 	
 	// 为每个照片生成 URL
 	stor := storage.GetStorage()
 	for i := range photos {
 		photos[i].URL = stor.GetURL(photos[i].StoragePath)
 		if photos[i].ThumbnailPath != "" {
-			photos[i].ThumbnailURL = stor.GetURL(photos[i].ThumbnailPath)
+			// 缩略图路径需要加上 thumbnails/ 前缀
+			photos[i].ThumbnailURL = stor.GetURL("thumbnails/" + photos[i].ThumbnailPath)
 		}
 	}
 	
@@ -75,7 +84,7 @@ func (h *PhotoHandler) GetPhoto(c *gin.Context) {
 	stor := storage.GetStorage()
 	photo.URL = stor.GetURL(photo.StoragePath)
 	if photo.ThumbnailPath != "" {
-		photo.ThumbnailURL = stor.GetURL(photo.ThumbnailPath)
+		photo.ThumbnailURL = stor.GetURL("thumbnails/" + photo.ThumbnailPath)
 	}
 	
 	// 增加浏览次数
@@ -258,6 +267,9 @@ func (h *PhotoHandler) UpdatePhoto(c *gin.Context) {
 	}
 	if copyright := c.PostForm("copyright"); copyright != "" {
 		updates["copyright"] = copyright
+	}
+	if category := c.PostForm("category"); category != "" {
+		updates["category"] = category
 	}
 	
 	if err := database.GetDB().Model(&photo).Updates(updates).Error; err != nil {

@@ -32,6 +32,7 @@ type Photo struct {
 	Description  string    `gorm:"type:text" json:"description"`
 	Tags         string    `json:"tags"`
 	Location     string    `json:"location"`
+	Category     string    `json:"category"` // 照片分类
 	
 	// EXIF 元数据
 	CameraMake   string    `json:"camera_make"`

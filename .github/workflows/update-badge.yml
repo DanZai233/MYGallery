@@ -1,0 +1,52 @@
+name: Update README Badges
+
+on:
+  workflow_run:
+    workflows: ["Docker Build and Push"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  update-badges:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get latest tag
+        id: get_version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update README badges
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          # 更新 README.md
+          if [ -f "README.md" ]; then
+            # 更新版本徽章
+            sed -i "s|Version-[0-9.]*-blue|Version-${VERSION}-blue|g" README.md
+            
+            # 更新 Docker 镜像大小徽章
+            sed -i "s|Docker%20Image%20Size-[^-]*-blue|Docker%20Image%20Size-${VERSION}-blue|g" README.md
+          fi
+          
+          # 更新 README_CN.md
+          if [ -f "README_CN.md" ]; then
+            sed -i "s|Version-[0-9.]*-blue|Version-${VERSION}-blue|g" README_CN.md
+            sed -i "s|Docker%20Image%20Size-[^-]*-blue|Docker%20Image%20Size-${VERSION}-blue|g" README_CN.md
+          fi
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README*.md
+          git diff --quiet && git diff --staged --quiet || (git commit -m "docs: update badges for version ${{ steps.get_version.outputs.version }}" && git push)
+

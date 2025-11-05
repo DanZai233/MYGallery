@@ -4,6 +4,15 @@
   <h1>📷 MYGallery</h1>
   <p>一个简约、美观、功能完整的个人照片墙系统</p>
   <p>人人都可以自部署自己的照片展示空间</p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Version-2.0.0-blue" alt="Version">
+    <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go" alt="Go Version">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+    <img src="https://img.shields.io/github/workflow/status/yourusername/mygallery/Docker%20Build%20and%20Push" alt="Build Status">
+    <img src="https://img.shields.io/docker/image-size/yourusername/mygallery" alt="Docker Image Size">
+    <img src="https://img.shields.io/docker/pulls/yourusername/mygallery" alt="Docker Pulls">
+  </p>
 </div>
 
 ## ✨ 特性

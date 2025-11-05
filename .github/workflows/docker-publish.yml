@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: ${{ github.repository_owner }}/mygallery
+  IMAGE_NAME: DanZai233/mygallery
 
 jobs:
   build-and-push:

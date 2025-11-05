@@ -14,7 +14,9 @@ RUN go mod download || true
 COPY . .
 
 # 构建应用
+# 修复 go-sqlite3 在 Alpine/musl 上的编译问题
 ENV GOTOOLCHAIN=auto
+ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
 RUN CGO_ENABLED=1 GOOS=linux go build -o mygallery .
 
 # 运行阶段

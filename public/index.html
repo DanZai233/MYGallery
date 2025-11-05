@@ -115,6 +115,16 @@
             100% { background-color: hsl(200, 20%, 95%); }
         }
         
+        /* 懒加载图片样式 */
+        .lazy-image {
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+        
+        .lazy-loaded {
+            opacity: 1;
+        }
+        
         /* lightGallery 毛玻璃效果 */
         .lg-backdrop {
             background-color: rgba(0, 0, 0, 0.7) !important;
@@ -419,11 +429,27 @@
         function handleSearch(event) {
             if (event.key === 'Enter') {
                 performSearch();
+            } else {
+                // 防抖搜索：300ms 后自动搜索
+                debouncedSearch();
             }
+        }
+
+        // 搜索防抖
+        let searchTimer;
+        function debouncedSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                const keyword = document.getElementById('search-input').value.trim();
+                if (keyword.length > 0) {
+                    performSearch();
+                }
+            }, 300); // 300ms 防抖
         }
 
         // 执行搜索
         function performSearch() {
+            clearTimeout(searchTimer); // 清除防抖计时器
             currentSearch = document.getElementById('search-input').value.trim();
             currentPage = 1;
             loadPhotos(1);
@@ -510,7 +536,7 @@
             }
         }
 
-        // 渲染照片
+        // 渲染照片（优化版：使用 DocumentFragment 批量插入）
         function renderPhotos(photos, replace = false) {
             const wall = document.getElementById('photo-wall');
             
@@ -518,34 +544,52 @@
                 wall.innerHTML = '';
             }
 
+            // 使用 DocumentFragment 减少重排
+            const fragment = document.createDocumentFragment();
             photos.forEach(photo => {
                 const card = createPhotoCard(photo);
-                wall.appendChild(card);
+                fragment.appendChild(card);
             });
+            
+            // 批量插入 DOM（只触发一次重排）
+            wall.appendChild(fragment);
 
             // 初始化 lightGallery
             if (replace) {
                 const galleryEl = document.getElementById('photo-wall');
                 
-                try {
-                    // 先销毁旧的实例（如果存在）
-                    if (window.lgInstance) {
-                        window.lgInstance.destroy();
+                // 使用 requestIdleCallback 延迟初始化，不阻塞主线程
+                const initLightGallery = () => {
+                    try {
+                        // 先销毁旧的实例（如果存在）
+                        if (window.lgInstance) {
+                            window.lgInstance.destroy();
+                        }
+                        
+                        // 创建新实例
+                        window.lgInstance = lightGallery(galleryEl, {
+                            selector: '.photo-item',
+                            plugins: [lgZoom, lgThumbnail],
+                            speed: 500,
+                            download: false
+                        });
+                        
+                        console.log('✅ lightGallery 初始化成功');
+                    } catch (error) {
+                        console.error('❌ lightGallery 初始化失败:', error);
                     }
-                    
-                    // 创建新实例
-                    window.lgInstance = lightGallery(galleryEl, {
-                        selector: '.photo-item',
-                        plugins: [lgZoom, lgThumbnail],
-                        speed: 500,
-                        download: false
-                    });
-                    
-                    console.log('✅ lightGallery 初始化成功');
-                } catch (error) {
-                    console.error('❌ lightGallery 初始化失败:', error);
+                };
+                
+                // 在浏览器空闲时初始化
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(initLightGallery);
+                } else {
+                    setTimeout(initLightGallery, 100);
                 }
             }
+            
+            // 初始化图片懒加载观察器
+            initLazyLoad();
         }
 
         // 创建照片卡片
@@ -568,9 +612,11 @@
 
             card.innerHTML = `
                 <div class="relative overflow-hidden rounded-xl shadow-lg group">
-                    <img src="${thumbUrl}" 
+                    <img data-src="${thumbUrl}" 
+                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23f0f0f0' width='400' height='300'/%3E%3C/svg%3E"
                          alt="${photo.title || photo.original_name}" 
-                         class="w-full h-auto object-cover"
+                         class="w-full h-auto object-cover lazy-image"
+                         loading="lazy"
                          onerror="this.src='${imageUrl}'">
                     <div class="photo-description">
                         <h3 class="font-semibold text-lg mb-1">${photo.title || photo.original_name}</h3>
@@ -657,6 +703,57 @@
             loadPhotos(currentPage);
         }
 
+        // 图片懒加载（使用 Intersection Observer）
+        let lazyLoadObserver;
+        function initLazyLoad() {
+            if (!lazyLoadObserver) {
+                lazyLoadObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            if (img.dataset.src) {
+                                img.src = img.dataset.src;
+                                img.classList.remove('lazy-image');
+                                img.classList.add('lazy-loaded');
+                                lazyLoadObserver.unobserve(img);
+                            }
+                        }
+                    });
+                }, {
+                    rootMargin: '50px' // 提前 50px 开始加载
+                });
+            }
+            
+            // 观察所有懒加载图片
+            document.querySelectorAll('.lazy-image').forEach(img => {
+                lazyLoadObserver.observe(img);
+            });
+        }
+
+        // 无限滚动（自动加载更多）
+        let scrollThrottle;
+        function initInfiniteScroll() {
+            window.addEventListener('scroll', () => {
+                // 节流：100ms 内只触发一次
+                if (scrollThrottle) return;
+                scrollThrottle = setTimeout(() => {
+                    scrollThrottle = null;
+                    
+                    // 距离底部 500px 时自动加载
+                    const scrollPosition = window.innerHeight + window.scrollY;
+                    const threshold = document.body.offsetHeight - 500;
+                    
+                    if (scrollPosition >= threshold && !isLoading) {
+                        const loadMoreBtn = document.getElementById('load-more');
+                        if (!loadMoreBtn.classList.contains('hidden')) {
+                            console.log('🔄 自动加载更多照片...');
+                            loadMore();
+                        }
+                    }
+                }, 100);
+            });
+        }
+
         
         // 黑夜模式切换
         function initThemeToggle() {
@@ -682,6 +779,14 @@
             initThemeToggle();
             loadCategories(); // 加载分类
             loadPhotos(1);
+            initInfiniteScroll(); // 初始化无限滚动
+            
+            console.log('✨ 性能优化已启用:');
+            console.log('  ✓ 图片懒加载 (Intersection Observer)');
+            console.log('  ✓ 搜索防抖 (300ms)');
+            console.log('  ✓ 无限滚动 (自动加载)');
+            console.log('  ✓ DOM 批量渲染 (DocumentFragment)');
+            console.log('  ✓ 延迟初始化 (requestIdleCallback)');
         });
     </script>
 </body>

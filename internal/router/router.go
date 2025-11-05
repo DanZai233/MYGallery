@@ -23,6 +23,9 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	r.Static("/uploads", cfg.Storage.Local.UploadDir)
 	r.StaticFile("/", "./public/index.html")
 	r.StaticFile("/admin", "./public/admin.html")
+	r.StaticFile("/settings.html", "./public/settings.html")
+	r.StaticFile("/categories.html", "./public/categories.html")
+	r.StaticFile("/test", "./test-frontend.html")
 	r.Static("/assets", "./public/assets")
 	
 	// 创建 handlers

@@ -110,6 +110,19 @@
                 </div>
             </div>
 
+            <!-- 快捷导航 -->
+            <div class="bg-white rounded-xl shadow-lg p-4 mb-8 flex space-x-4">
+                <a href="/settings.html" class="flex-1 text-center py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                    ⚙️ 网站设置
+                </a>
+                <a href="/categories.html" class="flex-1 text-center py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                    📁 分类管理
+                </a>
+                <a href="/" target="_blank" class="flex-1 text-center py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                    🏠 查看前台
+                </a>
+            </div>
+            
             <!-- 上传区域 -->
             <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">上传照片</h2>
@@ -197,10 +210,75 @@
                 </div>
                 
                 <div>
+                    <label class="block text-gray-700 font-medium mb-2">分类</label>
+                    <input type="text" id="edit-category"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                           placeholder="风景">
+                </div>
+                
+                <div>
                     <label class="block text-gray-700 font-medium mb-2">版权信息</label>
                     <input type="text" id="edit-copyright"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                            placeholder="© 2025 版权所有">
+                </div>
+                
+                <!-- EXIF 元数据编辑 -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                    <h3 class="font-medium text-gray-800 mb-4 flex items-center">
+                        <span class="text-xl mr-2">📸</span>
+                        相机元数据（可手动修改）
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">相机品牌</label>
+                            <input type="text" id="edit-camera-make"
+                                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                   placeholder="Sony">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">相机型号</label>
+                            <input type="text" id="edit-camera-model"
+                                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                   placeholder="A7R IV">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">镜头型号</label>
+                            <input type="text" id="edit-lens-model"
+                                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                   placeholder="FE 24-70mm F2.8 GM">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">焦距</label>
+                            <input type="text" id="edit-focal-length"
+                                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                   placeholder="35mm">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">光圈</label>
+                            <input type="text" id="edit-aperture"
+                                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                   placeholder="f/2.8">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">快门速度</label>
+                            <input type="text" id="edit-shutter-speed"
+                                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                   placeholder="1/250s">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">ISO</label>
+                            <input type="text" id="edit-iso"
+                                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                   placeholder="400">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm mb-2">拍摄时间</label>
+                            <input type="datetime-local" id="edit-date-taken"
+                                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="flex space-x-3 pt-4">
@@ -475,7 +553,23 @@
                 document.getElementById('edit-description').value = photo.description || '';
                 document.getElementById('edit-tags').value = photo.tags || '';
                 document.getElementById('edit-location').value = photo.location || '';
+                document.getElementById('edit-category').value = photo.category || '';
                 document.getElementById('edit-copyright').value = photo.copyright || '';
+                
+                // EXIF 元数据
+                document.getElementById('edit-camera-make').value = photo.camera_make || '';
+                document.getElementById('edit-camera-model').value = photo.camera_model || '';
+                document.getElementById('edit-lens-model').value = photo.lens_model || '';
+                document.getElementById('edit-focal-length').value = photo.focal_length || '';
+                document.getElementById('edit-aperture').value = photo.aperture || '';
+                document.getElementById('edit-shutter-speed').value = photo.shutter_speed || '';
+                document.getElementById('edit-iso').value = photo.iso || '';
+                
+                if (photo.date_taken) {
+                    const date = new Date(photo.date_taken);
+                    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+                    document.getElementById('edit-date-taken').value = localDate.toISOString().slice(0, 16);
+                }
                 
                 document.getElementById('edit-modal').classList.remove('hidden');
             } catch (error) {
@@ -498,7 +592,22 @@
             formData.append('description', document.getElementById('edit-description').value);
             formData.append('tags', document.getElementById('edit-tags').value);
             formData.append('location', document.getElementById('edit-location').value);
+            formData.append('category', document.getElementById('edit-category').value);
             formData.append('copyright', document.getElementById('edit-copyright').value);
+            
+            // EXIF 元数据
+            formData.append('camera_make', document.getElementById('edit-camera-make').value);
+            formData.append('camera_model', document.getElementById('edit-camera-model').value);
+            formData.append('lens_model', document.getElementById('edit-lens-model').value);
+            formData.append('focal_length', document.getElementById('edit-focal-length').value);
+            formData.append('aperture', document.getElementById('edit-aperture').value);
+            formData.append('shutter_speed', document.getElementById('edit-shutter-speed').value);
+            formData.append('iso', document.getElementById('edit-iso').value);
+            
+            const dateTaken = document.getElementById('edit-date-taken').value;
+            if (dateTaken) {
+                formData.append('date_taken', new Date(dateTaken).toISOString());
+            }
             
             try {
                 const response = await fetch(`${API_BASE}/photos/${id}`, {

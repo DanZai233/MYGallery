@@ -28,6 +28,7 @@ func (h *PhotoHandler) GetPhotos(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 	category := c.Query("category")
+	search := c.Query("search")
 	
 	if page < 1 {
 		page = 1
@@ -47,6 +48,15 @@ func (h *PhotoHandler) GetPhotos(c *gin.Context) {
 	// 按分类筛选
 	if category != "" {
 		query = query.Where("category = ?", category)
+	}
+	
+	// 搜索功能
+	if search != "" {
+		searchPattern := "%" + search + "%"
+		query = query.Where(
+			"title LIKE ? OR description LIKE ? OR tags LIKE ? OR location LIKE ? OR original_name LIKE ?",
+			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern,
+		)
 	}
 	
 	query.Count(&total)
@@ -270,6 +280,32 @@ func (h *PhotoHandler) UpdatePhoto(c *gin.Context) {
 	}
 	if category := c.PostForm("category"); category != "" {
 		updates["category"] = category
+	}
+	
+	// EXIF 元数据字段
+	if cameraMake := c.PostForm("camera_make"); cameraMake != "" {
+		updates["camera_make"] = cameraMake
+	}
+	if cameraModel := c.PostForm("camera_model"); cameraModel != "" {
+		updates["camera_model"] = cameraModel
+	}
+	if lensModel := c.PostForm("lens_model"); lensModel != "" {
+		updates["lens_model"] = lensModel
+	}
+	if focalLength := c.PostForm("focal_length"); focalLength != "" {
+		updates["focal_length"] = focalLength
+	}
+	if aperture := c.PostForm("aperture"); aperture != "" {
+		updates["aperture"] = aperture
+	}
+	if shutterSpeed := c.PostForm("shutter_speed"); shutterSpeed != "" {
+		updates["shutter_speed"] = shutterSpeed
+	}
+	if iso := c.PostForm("iso"); iso != "" {
+		updates["iso"] = iso
+	}
+	if dateTaken := c.PostForm("date_taken"); dateTaken != "" {
+		updates["date_taken"] = dateTaken
 	}
 	
 	if err := database.GetDB().Model(&photo).Updates(updates).Error; err != nil {

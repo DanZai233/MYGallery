@@ -109,13 +109,9 @@ go run main.go
 
 ⚠️ **重要**：首次登录后请立即修改默认密码！
 
-## 📖 详细文档
+## 📖 文档
 
 - 📚 [快速开始指南](QUICKSTART.md) - 5 分钟快速入门
-- 🚀 [部署指南](DEPLOYMENT.md) - 生产环境部署
-- 🏗️ [项目结构](STRUCTURE.md) - 代码组织说明
-- 🔧 [故障排除](TROUBLESHOOTING.md) - 常见问题解决
-- 📋 [更新日志](CHANGELOG.md) - 版本更新记录
 
 ## ⚙️ 配置说明
 

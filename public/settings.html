@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站设置 - MYGallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
+        <div class="px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="/admin" class="text-2xl hover:opacity-80">←</a>
+                <h1 class="text-xl font-bold text-gray-800">网站设置</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-700" id="admin-username"></span>
+                <a href="/admin" class="px-4 py-2 text-gray-700 hover:text-blue-600">返回管理</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容 -->
+    <main class="pt-24 px-6 pb-12 max-w-4xl mx-auto">
+        <form id="settings-form" class="space-y-6">
+            <!-- 基本信息 -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">基本信息</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">网站标题</label>
+                        <input type="text" id="site-title"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="MYGallery">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">网站描述</label>
+                        <textarea id="site-description" rows="3"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                  placeholder="个人照片展示与管理系统"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">网站关键词</label>
+                        <input type="text" id="site-keywords"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="照片墙,摄影,作品展示">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 备案信息 -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">备案信息</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">ICP 备案号</label>
+                        <input type="text" id="icp-record"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="京ICP备12345678号">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">公安备案号</label>
+                        <input type="text" id="beian-record"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="京公网安备11010802012345号">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">公安备案链接</label>
+                        <input type="text" id="beian-link"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="http://www.beian.gov.cn/portal/registerSystemInfo">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 联系方式 -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">联系方式</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">联系邮箱</label>
+                        <input type="email" id="contact-email"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="admin@example.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">联系电话</label>
+                        <input type="text" id="contact-phone"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="13800138000">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">微信号</label>
+                        <input type="text" id="contact-wechat"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="your-wechat-id">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 社交媒体 -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">社交媒体</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">GitHub</label>
+                        <input type="url" id="github-url"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="https://github.com/username">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Twitter / X</label>
+                        <input type="url" id="twitter-url"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="https://twitter.com/username">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">微博</label>
+                        <input type="url" id="weibo-url"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="https://weibo.com/username">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 自定义代码 -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">高级设置</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">页眉 HTML</label>
+                        <textarea id="header-html" rows="3"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                                  placeholder="<div>自定义页眉内容</div>"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">页脚 HTML</label>
+                        <textarea id="footer-html" rows="3"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                                  placeholder="<div>自定义页脚内容</div>"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">统计代码</label>
+                        <textarea id="analytics-code" rows="4"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                                  placeholder="<!-- Google Analytics 或其他统计代码 -->"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">自定义 CSS</label>
+                        <textarea id="custom-css" rows="4"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                                  placeholder=".photo-card { border-radius: 20px; }"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">自定义 JavaScript</label>
+                        <textarea id="custom-js" rows="4"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                                  placeholder="console.log('Custom JS loaded');"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 保存按钮 -->
+            <div class="flex justify-end space-x-4">
+                <a href="/admin" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    取消
+                </a>
+                <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    保存设置
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        const API_BASE = '/api';
+        let token = localStorage.getItem('admin_token');
+
+        // 检查登录状态
+        if (!token) {
+            window.location.href = '/admin';
+        }
+
+        // 加载设置
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/settings`);
+                const settings = await response.json();
+                
+                document.getElementById('site-title').value = settings.site_title || '';
+                document.getElementById('site-description').value = settings.site_description || '';
+                document.getElementById('site-keywords').value = settings.site_keywords || '';
+                document.getElementById('icp-record').value = settings.icp_record || '';
+                document.getElementById('beian-record').value = settings.beian_record || '';
+                document.getElementById('beian-link').value = settings.beian_link || '';
+                document.getElementById('contact-email').value = settings.contact_email || '';
+                document.getElementById('contact-phone').value = settings.contact_phone || '';
+                document.getElementById('contact-wechat').value = settings.contact_wechat || '';
+                document.getElementById('github-url').value = settings.github_url || '';
+                document.getElementById('twitter-url').value = settings.twitter_url || '';
+                document.getElementById('weibo-url').value = settings.weibo_url || '';
+                document.getElementById('header-html').value = settings.header_html || '';
+                document.getElementById('footer-html').value = settings.footer_html || '';
+                document.getElementById('analytics-code').value = settings.analytics_code || '';
+                document.getElementById('custom-css').value = settings.custom_css || '';
+                document.getElementById('custom-js').value = settings.custom_js || '';
+            } catch (error) {
+                console.error('加载设置失败:', error);
+            }
+        }
+
+        // 保存设置
+        document.getElementById('settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const settings = {
+                site_title: document.getElementById('site-title').value,
+                site_description: document.getElementById('site-description').value,
+                site_keywords: document.getElementById('site-keywords').value,
+                icp_record: document.getElementById('icp-record').value,
+                beian_record: document.getElementById('beian-record').value,
+                beian_link: document.getElementById('beian-link').value,
+                contact_email: document.getElementById('contact-email').value,
+                contact_phone: document.getElementById('contact-phone').value,
+                contact_wechat: document.getElementById('contact-wechat').value,
+                github_url: document.getElementById('github-url').value,
+                twitter_url: document.getElementById('twitter-url').value,
+                weibo_url: document.getElementById('weibo-url').value,
+                header_html: document.getElementById('header-html').value,
+                footer_html: document.getElementById('footer-html').value,
+                analytics_code: document.getElementById('analytics-code').value,
+                custom_css: document.getElementById('custom-css').value,
+                custom_js: document.getElementById('custom-js').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/settings`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                if (response.ok) {
+                    alert('设置保存成功！');
+                } else {
+                    const error = await response.json();
+                    alert('保存失败: ' + (error.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('保存失败: 网络错误');
+            }
+        });
+
+        // 初始化
+        loadSettings();
+    </script>
+</body>
+</html>
+

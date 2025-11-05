@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类管理 - MYGallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
+        <div class="px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="/admin" class="text-2xl hover:opacity-80">←</a>
+                <h1 class="text-xl font-bold text-gray-800">分类管理</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="showAddModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    ➕ 新建分类
+                </button>
+                <a href="/admin" class="px-4 py-2 text-gray-700 hover:text-blue-600">返回管理</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容 -->
+    <main class="pt-24 px-6 pb-12 max-w-6xl mx-auto">
+        <!-- 分类列表 -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div id="categories-loading" class="text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="text-gray-500 mt-4">加载中...</p>
+            </div>
+
+            <div id="categories-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 分类卡片通过 JS 生成 -->
+            </div>
+
+            <div id="categories-empty" class="hidden text-center py-12">
+                <div class="text-6xl mb-4">📁</div>
+                <p class="text-gray-500 mb-4">还没有创建任何分类</p>
+                <button onclick="showAddModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    创建第一个分类
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 新建/编辑分类模态框 -->
+    <div id="category-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800" id="modal-title">新建分类</h2>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <form id="category-form" class="space-y-4">
+                <input type="hidden" id="category-id">
+                
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">分类名称 *</label>
+                    <input type="text" id="category-name" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                           placeholder="如：风景、人像、城市">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">URL标识 *</label>
+                    <input type="text" id="category-slug" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                           placeholder="如：landscape, portrait（仅字母数字和-）">
+                    <p class="text-xs text-gray-500 mt-1">用于URL，建议使用英文</p>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">描述</label>
+                    <textarea id="category-description" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                              placeholder="分类的简短描述"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">排序顺序</label>
+                    <input type="number" id="category-order" value="0"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                           placeholder="0">
+                    <p class="text-xs text-gray-500 mt-1">数字越小越靠前</p>
+                </div>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="closeModal()"
+                            class="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        取消
+                    </button>
+                    <button type="submit"
+                            class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let token = localStorage.getItem('admin_token');
+
+        if (!token) {
+            window.location.href = '/admin';
+        }
+
+        // 加载分类列表
+        async function loadCategories() {
+            const loading = document.getElementById('categories-loading');
+            const grid = document.getElementById('categories-grid');
+            const empty = document.getElementById('categories-empty');
+            
+            loading.classList.remove('hidden');
+            grid.classList.add('hidden');
+            empty.classList.add('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE}/categories`);
+                const categories = await response.json();
+                
+                if (categories && categories.length > 0) {
+                    grid.innerHTML = categories.map(cat => createCategoryCard(cat)).join('');
+                    grid.classList.remove('hidden');
+                } else {
+                    empty.classList.remove('hidden');
+                }
+                
+                loading.classList.add('hidden');
+            } catch (error) {
+                console.error('加载分类失败:', error);
+                loading.innerHTML = '<p class="text-red-600">加载失败</p>';
+            }
+        }
+
+        // 创建分类卡片
+        function createCategoryCard(category) {
+            return `
+                <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">${category.name}</h3>
+                            <p class="text-sm text-gray-500">标识: ${category.slug}</p>
+                        </div>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">${category.photo_count || 0} 张</span>
+                    </div>
+                    
+                    ${category.description ? `<p class="text-gray-600 text-sm mb-4">${category.description}</p>` : ''}
+                    
+                    <div class="flex space-x-2">
+                        <button onclick="editCategory(${category.id})" 
+                                class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">
+                            ✏️ 编辑
+                        </button>
+                        <button onclick="deleteCategory(${category.id}, '${category.name}')" 
+                                class="flex-1 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded text-sm">
+                            🗑️ 删除
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示新建模态框
+        function showAddModal() {
+            document.getElementById('modal-title').textContent = '新建分类';
+            document.getElementById('category-form').reset();
+            document.getElementById('category-id').value = '';
+            document.getElementById('category-modal').classList.remove('hidden');
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('category-modal').classList.add('hidden');
+        }
+
+        // 编辑分类
+        async function editCategory(id) {
+            try {
+                const response = await fetch(`${API_BASE}/categories`);
+                const categories = await response.json();
+                const category = categories.find(c => c.id === id);
+                
+                if (category) {
+                    document.getElementById('modal-title').textContent = '编辑分类';
+                    document.getElementById('category-id').value = category.id;
+                    document.getElementById('category-name').value = category.name;
+                    document.getElementById('category-slug').value = category.slug;
+                    document.getElementById('category-description').value = category.description || '';
+                    document.getElementById('category-order').value = category.sort_order || 0;
+                    document.getElementById('category-modal').classList.remove('hidden');
+                }
+            } catch (error) {
+                alert('加载分类信息失败');
+            }
+        }
+
+        // 保存分类
+        document.getElementById('category-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('category-id').value;
+            const data = {
+                name: document.getElementById('category-name').value,
+                slug: document.getElementById('category-slug').value,
+                description: document.getElementById('category-description').value,
+                sort_order: parseInt(document.getElementById('category-order').value) || 0
+            };
+            
+            try {
+                const url = id ? `${API_BASE}/categories/${id}` : `${API_BASE}/categories`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    closeModal();
+                    loadCategories();
+                    alert(id ? '分类更新成功！' : '分类创建成功！');
+                } else {
+                    const error = await response.json();
+                    alert('操作失败: ' + (error.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('操作失败: 网络错误');
+            }
+        });
+
+        // 删除分类
+        async function deleteCategory(id, name) {
+            if (!confirm(`确定要删除分类"${name}"吗？\n此操作不会删除该分类下的照片。`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/categories/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    loadCategories();
+                    alert('分类删除成功！');
+                } else {
+                    const error = await response.json();
+                    alert('删除失败: ' + (error.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('删除失败: 网络错误');
+            }
+        }
+
+        // 初始化
+        loadCategories();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,49 @@
+# 二进制文件
+bin/
+mygallery
+
+# 配置文件
+config.yaml
+
+# 数据文件
+data/*.db
+data/*.db-journal
+
+# 上传文件
+uploads/*
+!uploads/.gitkeep
+
+# 日志
+*.log
+
+# 临时文件
+*.tmp
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/vendor/
+
+# 环境变量
+.env
+.env.local
+
+# 设计文档
+/design/

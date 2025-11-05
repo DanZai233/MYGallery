@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYGallery - 我的照片墙</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lg-zoom.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lg-thumbnail.min.css" rel="stylesheet">
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .photo-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        
+        .masonry-grid {
+            column-count: 4;
+            column-gap: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .masonry-grid { column-count: 3; }
+        }
+        
+        @media (max-width: 768px) {
+            .masonry-grid { column-count: 2; }
+        }
+        
+        @media (max-width: 480px) {
+            .masonry-grid { column-count: 1; }
+        }
+        
+        .photo-card img {
+            transition: transform 0.3s ease;
+        }
+        
+        .photo-card:hover img {
+            transform: scale(1.03);
+        }
+        
+        .skeleton {
+            animation: skeleton-loading 1s linear infinite alternate;
+        }
+        
+        @keyframes skeleton-loading {
+            0% { background-color: hsl(200, 20%, 80%); }
+            100% { background-color: hsl(200, 20%, 95%); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <header class="glass-effect fixed top-0 left-0 right-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="text-3xl">📷</div>
+                    <h1 class="text-2xl font-bold text-gray-800">MYGallery</h1>
+                </div>
+                <nav class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="text-gray-700 hover:text-blue-600 transition">首页</a>
+                    <a href="/admin" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        后台管理
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="max-w-7xl mx-auto px-6 pt-24 pb-12">
+        <!-- 标题区域 -->
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 mb-3">精选时刻 · 美好回忆</h2>
+            <p class="text-gray-600" id="photo-count">共 0 张照片</p>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loading" class="flex justify-center items-center py-20">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+        </div>
+
+        <!-- 照片墙 -->
+        <div id="photo-wall" class="masonry-grid hidden"></div>
+
+        <!-- 空状态 -->
+        <div id="empty-state" class="hidden text-center py-20">
+            <div class="text-6xl mb-4">📸</div>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-2">还没有照片</h3>
+            <p class="text-gray-500">前往后台管理上传你的第一张照片吧</p>
+            <a href="/admin" class="inline-block mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                前往上传
+            </a>
+        </div>
+
+        <!-- 加载更多 -->
+        <div id="load-more" class="hidden text-center mt-8">
+            <button onclick="loadMore()" class="px-8 py-3 bg-white shadow-lg rounded-lg hover:shadow-xl transition">
+                加载更多
+            </button>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="text-center py-8 text-gray-600">
+        <p>© 2025 MYGallery - 个人照片展示与管理系统</p>
+        <p class="text-sm mt-2">Powered by MYGallery v2.0</p>
+    </footer>
+
+    <!-- lightGallery -->
+    <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script>
+
+    <script>
+        const API_BASE = '/api';
+        let currentPage = 1;
+        let totalPhotos = 0;
+        let isLoading = false;
+
+        // 加载照片
+        async function loadPhotos(page = 1) {
+            if (isLoading) return;
+            isLoading = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/photos?page=${page}&size=20`);
+                const data = await response.json();
+
+                totalPhotos = data.total;
+                document.getElementById('photo-count').textContent = `共 ${totalPhotos} 张照片`;
+
+                if (data.photos && data.photos.length > 0) {
+                    renderPhotos(data.photos, page === 1);
+                    document.getElementById('photo-wall').classList.remove('hidden');
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('empty-state').classList.add('hidden');
+
+                    // 显示加载更多按钮
+                    if (data.photos.length === 20 && data.total > page * 20) {
+                        document.getElementById('load-more').classList.remove('hidden');
+                    } else {
+                        document.getElementById('load-more').classList.add('hidden');
+                    }
+                } else if (page === 1) {
+                    document.getElementById('empty-state').classList.remove('hidden');
+                    document.getElementById('loading').classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('加载照片失败:', error);
+                alert('加载照片失败，请刷新页面重试');
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // 渲染照片
+        function renderPhotos(photos, replace = false) {
+            const wall = document.getElementById('photo-wall');
+            
+            if (replace) {
+                wall.innerHTML = '';
+            }
+
+            photos.forEach(photo => {
+                const card = createPhotoCard(photo);
+                wall.appendChild(card);
+            });
+
+            // 初始化 lightGallery
+            if (replace) {
+                lightGallery(wall, {
+                    selector: '.photo-item',
+                    plugins: [lgZoom, lgThumbnail],
+                    speed: 500,
+                    download: false
+                });
+            }
+        }
+
+        // 创建照片卡片
+        function createPhotoCard(photo) {
+            const card = document.createElement('div');
+            card.className = 'photo-card photo-item mb-5 cursor-pointer';
+            card.setAttribute('data-src', photo.url);
+            card.setAttribute('data-sub-html', createPhotoInfo(photo));
+
+            const exifInfo = [];
+            if (photo.camera_model) exifInfo.push(photo.camera_model);
+            if (photo.aperture) exifInfo.push(photo.aperture);
+            if (photo.shutter_speed) exifInfo.push(photo.shutter_speed);
+            if (photo.iso) exifInfo.push(`ISO ${photo.iso}`);
+
+            card.innerHTML = `
+                <div class="relative overflow-hidden rounded-xl shadow-lg group">
+                    <img src="${photo.thumbnail_url || photo.url}" 
+                         alt="${photo.title || photo.original_name}" 
+                         class="w-full h-auto object-cover">
+                    <div class="glass-effect absolute bottom-0 left-0 right-0 p-4 rounded-b-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <h3 class="text-white font-semibold text-lg mb-1">${photo.title || photo.original_name}</h3>
+                        ${exifInfo.length > 0 ? `<p class="text-gray-200 text-sm">${exifInfo.join(' · ')}</p>` : ''}
+                        ${photo.location ? `<p class="text-gray-300 text-xs mt-1">📍 ${photo.location}</p>` : ''}
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // 创建照片详细信息
+        function createPhotoInfo(photo) {
+            let html = `<h4 class="text-xl font-bold mb-2">${photo.title || photo.original_name}</h4>`;
+            
+            if (photo.description) {
+                html += `<p class="mb-3">${photo.description}</p>`;
+            }
+
+            html += '<div class="text-sm space-y-1">';
+            if (photo.camera_make && photo.camera_model) {
+                html += `<p>📷 ${photo.camera_make} ${photo.camera_model}</p>`;
+            }
+            if (photo.lens_model) {
+                html += `<p>🔭 ${photo.lens_model}</p>`;
+            }
+            if (photo.aperture || photo.shutter_speed || photo.iso) {
+                const params = [];
+                if (photo.aperture) params.push(photo.aperture);
+                if (photo.shutter_speed) params.push(photo.shutter_speed);
+                if (photo.iso) params.push(`ISO ${photo.iso}`);
+                if (photo.focal_length) params.push(photo.focal_length);
+                html += `<p>⚙️ ${params.join(' · ')}</p>`;
+            }
+            if (photo.location) {
+                html += `<p>📍 ${photo.location}</p>`;
+            }
+            if (photo.date_taken) {
+                const date = new Date(photo.date_taken).toLocaleString('zh-CN');
+                html += `<p>🕐 ${date}</p>`;
+            }
+            if (photo.tags) {
+                html += `<p>🏷️ ${photo.tags}</p>`;
+            }
+            html += '</div>';
+
+            return html;
+        }
+
+        // 加载更多
+        function loadMore() {
+            currentPage++;
+            loadPhotos(currentPage);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPhotos(1);
+        });
+    </script>
+</body>
+</html>
+

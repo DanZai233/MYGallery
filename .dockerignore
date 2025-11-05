@@ -1,0 +1,20 @@
+# 忽略不需要打包的文件
+.git
+.gitignore
+*.md
+LICENSE
+
+# 数据文件
+data/
+uploads/
+config.yaml
+
+# 开发文件
+.vscode/
+.idea/
+*.log
+
+# 文档
+*.md
+!README.md
+

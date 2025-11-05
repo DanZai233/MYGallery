@@ -1,0 +1,122 @@
+# MYGallery 配置文件示例
+# 复制此文件为 config.yaml 并根据需要修改
+
+# 服务器配置
+server:
+  host: "0.0.0.0"
+  port: 8080
+  mode: "release"  # debug, release, test
+
+# 数据库配置
+# 支持: sqlite, mysql, postgres
+database:
+  type: "sqlite"  # sqlite, mysql, postgres
+  
+  # SQLite 配置
+  sqlite:
+    path: "./data/mygallery.db"
+  
+  # MySQL 配置
+  mysql:
+    host: "localhost"
+    port: 3306
+    username: "root"
+    password: "password"
+    database: "mygallery"
+    charset: "utf8mb4"
+  
+  # PostgreSQL 配置
+  postgres:
+    host: "localhost"
+    port: 5432
+    username: "postgres"
+    password: "password"
+    database: "mygallery"
+    sslmode: "disable"
+
+# 存储配置
+# 支持: local, s3, minio, aliyun
+storage:
+  type: "local"  # local, s3, minio, aliyun
+  
+  # 本地存储
+  local:
+    upload_dir: "./uploads"
+    thumbnail_dir: "./uploads/thumbnails"
+    url_prefix: "/uploads"  # 访问URL前缀
+  
+  # AWS S3
+  s3:
+    region: "us-east-1"
+    bucket: "mygallery"
+    access_key: "your-access-key"
+    secret_key: "your-secret-key"
+    endpoint: ""  # 可选，自定义endpoint
+    url_prefix: "https://your-bucket.s3.amazonaws.com"
+  
+  # MinIO
+  minio:
+    endpoint: "localhost:9000"
+    bucket: "mygallery"
+    access_key: "minioadmin"
+    secret_key: "minioadmin"
+    use_ssl: false
+    url_prefix: "http://localhost:9000/mygallery"
+  
+  # 阿里云 OSS
+  aliyun:
+    endpoint: "oss-cn-hangzhou.aliyuncs.com"
+    bucket: "mygallery"
+    access_key: "your-access-key"
+    secret_key: "your-secret-key"
+    url_prefix: "https://mygallery.oss-cn-hangzhou.aliyuncs.com"
+
+# JWT配置
+jwt:
+  secret: "your-secret-key-change-this-in-production"
+  expire_hours: 168  # 7天
+
+# 管理员配置
+admin:
+  username: "admin"
+  password: "admin123"  # 首次启动后会自动加密
+  email: "admin@example.com"
+
+# 图片处理配置
+image:
+  max_upload_size: 52428800  # 50MB (字节)
+  allowed_types:
+    - "image/jpeg"
+    - "image/png"
+    - "image/gif"
+    - "image/webp"
+  thumbnail:
+    width: 400
+    height: 400
+    quality: 85
+
+# CORS 配置
+cors:
+  enabled: true
+  allow_origins:
+    - "*"
+  allow_methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  allow_headers:
+    - "Origin"
+    - "Content-Type"
+    - "Authorization"
+
+# 应用配置
+app:
+  name: "MYGallery"
+  version: "2.0.0"
+  site_title: "MYGallery"
+  site_description: "A simple and beautiful photo gallery system"
+  pagination:
+    page_size: 20
+

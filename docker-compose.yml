@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: mygallery:latest
     container_name: mygallery
     restart: unless-stopped
     ports:

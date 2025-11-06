@@ -51,7 +51,7 @@
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/yourusername/mygallery.git
+git clone https://github.com/danzai233/mygallery.git
 cd mygallery
 
 # 2. 安装依赖
@@ -68,7 +68,7 @@ go run main.go
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/yourusername/mygallery.git
+git clone https://github.com/danzai233/mygallery.git
 cd mygallery
 
 # 2. 创建配置

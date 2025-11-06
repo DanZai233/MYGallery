@@ -1,6 +1,8 @@
 services:
   mygallery:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: mygallery
     restart: unless-stopped
     ports:

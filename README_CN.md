@@ -6,7 +6,7 @@
   <p>人人都可以自部署自己的照片展示空间</p>
   
   <p>
-    <img src="https://img.shields.io/badge/Version-1.1.2-blue" alt="Version">
+    <img src="https://img.shields.io/badge/Version-1.1.4-blue" alt="Version">
     <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go" alt="Go Version">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
     <img src="https://img.shields.io/github/workflow/status/yourusername/mygallery/Docker%20Build%20and%20Push" alt="Build Status">

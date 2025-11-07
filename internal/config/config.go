@@ -25,10 +25,10 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	Type     string           `yaml:"type"`
-	SQLite   SQLiteConfig     `yaml:"sqlite"`
-	MySQL    MySQLConfig      `yaml:"mysql"`
-	Postgres PostgresConfig   `yaml:"postgres"`
+	Type     string         `yaml:"type"`
+	SQLite   SQLiteConfig   `yaml:"sqlite"`
+	MySQL    MySQLConfig    `yaml:"mysql"`
+	Postgres PostgresConfig `yaml:"postgres"`
 }
 
 type SQLiteConfig struct {
@@ -54,11 +54,11 @@ type PostgresConfig struct {
 }
 
 type StorageConfig struct {
-	Type    string        `yaml:"type"`
-	Local   LocalStorage  `yaml:"local"`
-	S3      S3Storage     `yaml:"s3"`
-	MinIO   MinIOStorage  `yaml:"minio"`
-	Aliyun  AliyunStorage `yaml:"aliyun"`
+	Type   string        `yaml:"type"`
+	Local  LocalStorage  `yaml:"local"`
+	S3     S3Storage     `yaml:"s3"`
+	MinIO  MinIOStorage  `yaml:"minio"`
+	Aliyun AliyunStorage `yaml:"aliyun"`
 }
 
 type LocalStorage struct {
@@ -138,6 +138,11 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	return FromBytes(data)
+}
+
+// FromBytes parses configuration data from YAML bytes.
+func FromBytes(data []byte) (*Config, error) {
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, err
@@ -195,4 +200,3 @@ func DefaultConfig() *Config {
 		},
 	}
 }
-

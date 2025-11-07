@@ -17,6 +17,30 @@ services:
     networks:
       - mygallery-network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mygallery-frontend
+    restart: unless-stopped
+    environment:
+      NITRO_PORT: 3000
+      NITRO_HOST: 0.0.0.0
+      NUXT_SESSION_PASSWORD: changeme-32-characters!
+      NUXT_STORAGE_PROVIDER: local
+      NUXT_PROVIDER_LOCAL_PATH: /app/data/storage
+      NUXT_PROVIDER_LOCAL_BASE_URL: /storage
+      API_BASE_URL: http://mygallery:8080
+      EXTERNAL_BACKEND: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./uploads:/app/data/storage
+    depends_on:
+      - mygallery
+    networks:
+      - mygallery-network
+
   # 可选：使用 PostgreSQL 数据库
   # postgres:
   #   image: postgres:15-alpine

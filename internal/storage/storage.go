@@ -12,6 +12,7 @@ import (
 // Storage 存储接口
 type Storage interface {
 	Upload(filename string, file io.Reader) (string, error)
+	UploadThumbnail(filename string, file io.Reader) (string, error)
 	Delete(path string) error
 	GetURL(path string) string
 }
@@ -81,6 +82,20 @@ func (s *LocalStorage) Upload(filename string, file io.Reader) (string, error) {
 		return "", err
 	}
 	
+	return filename, nil
+}
+
+// UploadThumbnail 上传缩略图到本地
+func (s *LocalStorage) UploadThumbnail(filename string, file io.Reader) (string, error) {
+	fp := filepath.Join(s.thumbnailDir, filename)
+	dst, err := os.Create(fp)
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
+	if _, err := io.Copy(dst, file); err != nil {
+		return "", err
+	}
 	return filename, nil
 }
 

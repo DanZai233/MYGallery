@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -29,28 +31,26 @@ func (h *PhotoHandler) GetPhotos(c *gin.Context) {
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 	category := c.Query("category")
 	search := c.Query("search")
-	
+
 	if page < 1 {
 		page = 1
 	}
 	if size < 1 || size > 100 {
 		size = 20
 	}
-	
+
 	offset := (page - 1) * size
-	
+
 	var photos []models.Photo
 	var total int64
-	
+
 	db := database.GetDB()
 	query := db.Model(&models.Photo{})
-	
-	// 按分类筛选
+
 	if category != "" {
 		query = query.Where("category = ?", category)
 	}
-	
-	// 搜索功能
+
 	if search != "" {
 		searchPattern := "%" + search + "%"
 		query = query.Where(
@@ -58,20 +58,21 @@ func (h *PhotoHandler) GetPhotos(c *gin.Context) {
 			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern,
 		)
 	}
-	
+
 	query.Count(&total)
 	query.Offset(offset).Limit(size).Order("created_at DESC").Find(&photos)
-	
-	// 为每个照片生成 URL
+
 	stor := storage.GetStorage()
 	for i := range photos {
 		photos[i].URL = stor.GetURL(photos[i].StoragePath)
 		if photos[i].ThumbnailPath != "" {
-			// 缩略图路径需要加上 thumbnails/ 前缀
 			photos[i].ThumbnailURL = stor.GetURL("thumbnails/" + photos[i].ThumbnailPath)
 		}
+		if photos[i].IsLivePhoto && photos[i].LivePhotoPath != "" {
+			photos[i].LivePhotoURL = stor.GetURL(photos[i].LivePhotoPath)
+		}
 	}
-	
+
 	c.JSON(http.StatusOK, models.PhotoListResponse{
 		Total:  total,
 		Page:   page,
@@ -83,31 +84,31 @@ func (h *PhotoHandler) GetPhotos(c *gin.Context) {
 // GetPhoto 获取单张照片
 func (h *PhotoHandler) GetPhoto(c *gin.Context) {
 	id := c.Param("id")
-	
+
 	var photo models.Photo
 	if err := database.GetDB().First(&photo, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{Error: "照片不存在"})
 		return
 	}
-	
-	// 生成 URL
+
 	stor := storage.GetStorage()
 	photo.URL = stor.GetURL(photo.StoragePath)
 	if photo.ThumbnailPath != "" {
 		photo.ThumbnailURL = stor.GetURL("thumbnails/" + photo.ThumbnailPath)
 	}
-	
-	// 增加浏览次数
+	if photo.IsLivePhoto && photo.LivePhotoPath != "" {
+		photo.LivePhotoURL = stor.GetURL(photo.LivePhotoPath)
+	}
+
 	database.GetDB().Model(&photo).UpdateColumn("views", photo.Views+1)
-	
+
 	c.JSON(http.StatusOK, photo)
 }
 
-// UploadPhoto 上传照片
+// UploadPhoto 上传照片（支持云存储缩略图 + Live Photo）
 func (h *PhotoHandler) UploadPhoto(c *gin.Context) {
 	userID := c.GetUint("user_id")
-	
-	// 获取上传的文件
+
 	file, header, err := c.Request.FormFile("photo")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -117,37 +118,33 @@ func (h *PhotoHandler) UploadPhoto(c *gin.Context) {
 		return
 	}
 	defer file.Close()
-	
-	// 检查文件类型
+
 	if !utils.IsAllowedImageType(header.Header.Get("Content-Type"), h.cfg.Image.AllowedTypes) {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: "不支持的文件类型",
 		})
 		return
 	}
-	
-	// 检查文件大小
+
 	fileSize, err := utils.GetFileSize(file)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "获取文件大小失败"})
 		return
 	}
-	
+
 	if fileSize > h.cfg.Image.MaxUploadSize {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: fmt.Sprintf("文件大小超过限制 (%dMB)", h.cfg.Image.MaxUploadSize/1024/1024),
 		})
 		return
 	}
-	
-	// 生成文件名
+
 	filename := utils.GenerateFilename(header.Filename)
-	
-	// 保存到临时目录（用于EXIF提取）
+
 	tempDir := filepath.Join(os.TempDir(), "mygallery")
 	os.MkdirAll(tempDir, 0755)
 	tempPath := filepath.Join(tempDir, filename)
-	
+
 	tempFile, err := os.Create(tempPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "创建临时文件失败"})
@@ -155,35 +152,38 @@ func (h *PhotoHandler) UploadPhoto(c *gin.Context) {
 	}
 	defer os.Remove(tempPath)
 	defer tempFile.Close()
-	
+
 	file.Seek(0, 0)
 	if _, err := tempFile.ReadFrom(file); err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "保存临时文件失败"})
 		return
 	}
 	tempFile.Close()
-	
-	// 提取 EXIF 信息
+
 	exifData, _ := utils.ExtractEXIF(tempPath)
-	
-	// 生成缩略图
+
 	thumbnailFilename := "thumb_" + filename
-	var thumbnailPath string
-	
-	if localStor, ok := storage.GetStorage().(*storage.LocalStorage); ok {
-		thumbnailPath = filepath.Join(localStor.GetThumbnailDir(), thumbnailFilename)
-		utils.GenerateThumbnail(
-			tempPath,
-			thumbnailPath,
-			h.cfg.Image.Thumbnail.Width,
-			h.cfg.Image.Thumbnail.Height,
-			h.cfg.Image.Thumbnail.Quality,
-		)
-	}
-	
-	// 上传到存储
-	file.Seek(0, 0)
 	stor := storage.GetStorage()
+
+	if localStor, ok := stor.(*storage.LocalStorage); ok {
+		thumbnailPath := filepath.Join(localStor.GetThumbnailDir(), thumbnailFilename)
+		utils.GenerateThumbnail(
+			tempPath, thumbnailPath,
+			h.cfg.Image.Thumbnail.Width, h.cfg.Image.Thumbnail.Height, h.cfg.Image.Thumbnail.Quality,
+		)
+	} else {
+		thumbBytes, err := utils.GenerateThumbnailBytes(
+			tempPath,
+			h.cfg.Image.Thumbnail.Width, h.cfg.Image.Thumbnail.Height, h.cfg.Image.Thumbnail.Quality,
+		)
+		if err == nil {
+			stor.UploadThumbnail(thumbnailFilename, bytes.NewReader(thumbBytes))
+		} else {
+			log.Printf("生成缩略图失败: %v", err)
+		}
+	}
+
+	file.Seek(0, 0)
 	storagePath, err := stor.Upload(filename, file)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -192,8 +192,7 @@ func (h *PhotoHandler) UploadPhoto(c *gin.Context) {
 		})
 		return
 	}
-	
-	// 创建照片记录
+
 	photo := models.Photo{
 		Filename:      filename,
 		OriginalName:  header.Filename,
@@ -209,8 +208,7 @@ func (h *PhotoHandler) UploadPhoto(c *gin.Context) {
 		Copyright:     c.PostForm("copyright"),
 		UserID:        userID,
 	}
-	
-	// 设置 EXIF 数据
+
 	if exifData != nil {
 		photo.CameraMake = exifData.CameraMake
 		photo.CameraModel = exifData.CameraModel
@@ -224,11 +222,30 @@ func (h *PhotoHandler) UploadPhoto(c *gin.Context) {
 		photo.GPSLongitude = exifData.GPSLongitude
 		photo.Width = exifData.Width
 		photo.Height = exifData.Height
+		photo.Software = exifData.Software
+		photo.Orientation = exifData.Orientation
+		photo.WhiteBalance = exifData.WhiteBalance
+		photo.Flash = exifData.Flash
+		photo.ExposureMode = exifData.ExposureMode
+		photo.MeteringMode = exifData.MeteringMode
+		photo.ExposureBias = exifData.ExposureBias
+		photo.ColorSpace = exifData.ColorSpace
+		photo.SceneType = exifData.SceneType
 	}
-	
-	// 保存到数据库
+
+	// Live Photo 配套视频上传
+	if liveVideo, liveHeader, err := c.Request.FormFile("live_photo"); err == nil {
+		defer liveVideo.Close()
+		if utils.IsLivePhotoVideo(liveHeader.Filename) {
+			liveFilename := "live_" + utils.GenerateFilename(liveHeader.Filename)
+			if livePath, err := stor.Upload(liveFilename, liveVideo); err == nil {
+				photo.IsLivePhoto = true
+				photo.LivePhotoPath = livePath
+			}
+		}
+	}
+
 	if err := database.GetDB().Create(&photo).Error; err != nil {
-		// 删除已上传的文件
 		stor.Delete(storagePath)
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   "保存照片信息失败",
@@ -236,13 +253,15 @@ func (h *PhotoHandler) UploadPhoto(c *gin.Context) {
 		})
 		return
 	}
-	
-	// 生成 URL
+
 	photo.URL = stor.GetURL(photo.StoragePath)
 	if photo.ThumbnailPath != "" {
-		photo.ThumbnailURL = stor.GetURL(photo.ThumbnailPath)
+		photo.ThumbnailURL = stor.GetURL("thumbnails/" + photo.ThumbnailPath)
 	}
-	
+	if photo.IsLivePhoto && photo.LivePhotoPath != "" {
+		photo.LivePhotoURL = stor.GetURL(photo.LivePhotoPath)
+	}
+
 	c.JSON(http.StatusOK, models.UploadResponse{
 		Success: true,
 		Message: "照片上传成功",
@@ -253,61 +272,34 @@ func (h *PhotoHandler) UploadPhoto(c *gin.Context) {
 // UpdatePhoto 更新照片信息
 func (h *PhotoHandler) UpdatePhoto(c *gin.Context) {
 	id := c.Param("id")
-	
+
 	var photo models.Photo
 	if err := database.GetDB().First(&photo, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{Error: "照片不存在"})
 		return
 	}
-	
-	// 更新字段
+
 	updates := make(map[string]interface{})
-	
-	if title := c.PostForm("title"); title != "" {
-		updates["title"] = title
+
+	formFields := map[string]string{
+		"title": "title", "description": "description", "tags": "tags",
+		"location": "location", "copyright": "copyright", "category": "category",
+		"camera_make": "camera_make", "camera_model": "camera_model",
+		"lens_model": "lens_model", "focal_length": "focal_length",
+		"aperture": "aperture", "shutter_speed": "shutter_speed",
+		"iso": "iso", "date_taken": "date_taken",
+		"software": "software", "white_balance": "white_balance",
+		"flash": "flash", "exposure_mode": "exposure_mode",
+		"metering_mode": "metering_mode", "exposure_bias": "exposure_bias",
+		"color_space": "color_space", "scene_type": "scene_type",
 	}
-	if description := c.PostForm("description"); description != "" {
-		updates["description"] = description
+
+	for formKey, dbKey := range formFields {
+		if val := c.PostForm(formKey); val != "" {
+			updates[dbKey] = val
+		}
 	}
-	if tags := c.PostForm("tags"); tags != "" {
-		updates["tags"] = tags
-	}
-	if location := c.PostForm("location"); location != "" {
-		updates["location"] = location
-	}
-	if copyright := c.PostForm("copyright"); copyright != "" {
-		updates["copyright"] = copyright
-	}
-	if category := c.PostForm("category"); category != "" {
-		updates["category"] = category
-	}
-	
-	// EXIF 元数据字段
-	if cameraMake := c.PostForm("camera_make"); cameraMake != "" {
-		updates["camera_make"] = cameraMake
-	}
-	if cameraModel := c.PostForm("camera_model"); cameraModel != "" {
-		updates["camera_model"] = cameraModel
-	}
-	if lensModel := c.PostForm("lens_model"); lensModel != "" {
-		updates["lens_model"] = lensModel
-	}
-	if focalLength := c.PostForm("focal_length"); focalLength != "" {
-		updates["focal_length"] = focalLength
-	}
-	if aperture := c.PostForm("aperture"); aperture != "" {
-		updates["aperture"] = aperture
-	}
-	if shutterSpeed := c.PostForm("shutter_speed"); shutterSpeed != "" {
-		updates["shutter_speed"] = shutterSpeed
-	}
-	if iso := c.PostForm("iso"); iso != "" {
-		updates["iso"] = iso
-	}
-	if dateTaken := c.PostForm("date_taken"); dateTaken != "" {
-		updates["date_taken"] = dateTaken
-	}
-	
+
 	if err := database.GetDB().Model(&photo).Updates(updates).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   "更新照片信息失败",
@@ -315,17 +307,18 @@ func (h *PhotoHandler) UpdatePhoto(c *gin.Context) {
 		})
 		return
 	}
-	
-	// 重新获取更新后的数据
+
 	database.GetDB().First(&photo, id)
-	
-	// 生成 URL
+
 	stor := storage.GetStorage()
 	photo.URL = stor.GetURL(photo.StoragePath)
 	if photo.ThumbnailPath != "" {
-		photo.ThumbnailURL = stor.GetURL(photo.ThumbnailPath)
+		photo.ThumbnailURL = stor.GetURL("thumbnails/" + photo.ThumbnailPath)
 	}
-	
+	if photo.IsLivePhoto && photo.LivePhotoPath != "" {
+		photo.LivePhotoURL = stor.GetURL(photo.LivePhotoPath)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "照片信息更新成功",
@@ -336,21 +329,22 @@ func (h *PhotoHandler) UpdatePhoto(c *gin.Context) {
 // DeletePhoto 删除照片
 func (h *PhotoHandler) DeletePhoto(c *gin.Context) {
 	id := c.Param("id")
-	
+
 	var photo models.Photo
 	if err := database.GetDB().First(&photo, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{Error: "照片不存在"})
 		return
 	}
-	
-	// 删除存储的文件
+
 	stor := storage.GetStorage()
 	stor.Delete(photo.StoragePath)
 	if photo.ThumbnailPath != "" {
-		stor.Delete(photo.ThumbnailPath)
+		stor.Delete("thumbnails/" + photo.ThumbnailPath)
 	}
-	
-	// 从数据库删除
+	if photo.LivePhotoPath != "" {
+		stor.Delete(photo.LivePhotoPath)
+	}
+
 	if err := database.GetDB().Delete(&photo).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   "删除照片失败",
@@ -358,10 +352,9 @@ func (h *PhotoHandler) DeletePhoto(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "照片删除成功",
 	})
 }
-

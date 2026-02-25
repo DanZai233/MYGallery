@@ -53,6 +53,20 @@ func (s *AliyunStorage) Upload(filename string, file io.Reader) (string, error) 
 	return filename, nil
 }
 
+// UploadThumbnail 上传缩略图到阿里云 OSS
+func (s *AliyunStorage) UploadThumbnail(filename string, file io.Reader) (string, error) {
+	buf := new(bytes.Buffer)
+	if _, err := io.Copy(buf, file); err != nil {
+		return "", err
+	}
+	key := "thumbnails/" + filename
+	err := s.bucket.PutObject(key, bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		return "", fmt.Errorf("上传缩略图到阿里云 OSS 失败: %w", err)
+	}
+	return filename, nil
+}
+
 // Delete 从阿里云 OSS 删除文件
 func (s *AliyunStorage) Delete(path string) error {
 	return s.bucket.DeleteObject(path)

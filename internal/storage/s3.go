@@ -65,6 +65,28 @@ func (s *S3Storage) Upload(filename string, file io.Reader) (string, error) {
 	return filename, nil
 }
 
+// UploadThumbnail 上传缩略图到 S3
+func (s *S3Storage) UploadThumbnail(filename string, file io.Reader) (string, error) {
+	buf := new(bytes.Buffer)
+	if _, err := io.Copy(buf, file); err != nil {
+		return "", err
+	}
+
+	key := "thumbnails/" + filename
+	_, err := s.client.PutObject(&s3.PutObjectInput{
+		Bucket:      aws.String(s.bucket),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(buf.Bytes()),
+		ACL:         aws.String("public-read"),
+		ContentType: aws.String("image/jpeg"),
+	})
+	if err != nil {
+		return "", fmt.Errorf("上传缩略图到 S3 失败: %w", err)
+	}
+
+	return filename, nil
+}
+
 // Delete 从 S3 删除文件
 func (s *S3Storage) Delete(path string) error {
 	_, err := s.client.DeleteObject(&s3.DeleteObjectInput{

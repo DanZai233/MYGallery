@@ -61,6 +61,19 @@ func (s *MinIOStorage) Upload(filename string, file io.Reader) (string, error) {
 	return filename, nil
 }
 
+// UploadThumbnail 上传缩略图到 MinIO
+func (s *MinIOStorage) UploadThumbnail(filename string, file io.Reader) (string, error) {
+	ctx := context.Background()
+	key := "thumbnails/" + filename
+	_, err := s.client.PutObject(ctx, s.bucket, key, file, -1, minio.PutObjectOptions{
+		ContentType: "image/jpeg",
+	})
+	if err != nil {
+		return "", fmt.Errorf("上传缩略图到 MinIO 失败: %w", err)
+	}
+	return filename, nil
+}
+
 // Delete 从 MinIO 删除文件
 func (s *MinIOStorage) Delete(path string) error {
 	ctx := context.Background()

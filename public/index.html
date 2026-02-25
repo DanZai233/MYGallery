@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>MYGallery - 我的照片墙</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -102,6 +103,29 @@
             .viewer-prev{left:6px;width:32px;height:32px} .viewer-next{right:6px;width:32px;height:32px}
             .viewer-share{right:50px} .viewer-info-btn{right:8px} .viewer-close{left:8px}
         }
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: flex; align-items: center; }
+            .desktop-nav { display: none !important; }
+            .mobile-nav {
+                position: fixed; top: 64px; left: 0; right: 0;
+                background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--glass-border);
+                padding: 16px 24px; z-index: 45;
+                transform: translateY(-100%); opacity: 0;
+                transition: all 0.3s ease;
+            }
+            .mobile-nav.open { transform: translateY(0); opacity: 1; }
+            .hero-title { font-size: 1.75rem !important; }
+            .photo-card { margin-bottom: 10px; }
+            .photo-card .card-inner { border-radius: 12px; }
+            .photo-description { padding: 30px 12px 12px; }
+            .photo-description h3 { font-size: 14px !important; }
+            .photo-description p { font-size: 11px !important; }
+        }
+
+        footer { color: var(--text-secondary); }
+
+        .exif-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: rgba(255,255,255,0.15); border-radius: 999px; font-size: 13px; backdrop-filter: blur(4px); }
     </style>
 </head>
 <body>

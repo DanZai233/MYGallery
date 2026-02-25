@@ -15,32 +15,54 @@
 ## 📸 界面预览
 
 ### 暗色模式 · 瀑布流画廊
-> 默认暗色主题，5列紧凑瀑布流，侧栏简笔画图标导航
+
+默认暗色主题，5 列紧凑瀑布流布局，侧栏 SVG 简笔画图标导航。
 
 ![暗色模式画廊](docs/screenshots/gallery-dark.webp)
 
 ### 亮色模式
-> 一键切换白天/黑夜主题
+
+一键切换亮色/暗色主题，偏好自动记忆。
 
 ![亮色模式画廊](docs/screenshots/gallery-light.webp)
 
-### 灯箱查看器 · 信息面板
-> ChronoFrame 风格全屏查看器，右侧信息面板展示 EXIF 元数据、分类标签，底部缩略图条可快速跳转
+### 灯箱查看器 · EXIF 信息面板
+
+ChronoFrame 风格全屏查看器，右侧信息面板分区展示 EXIF 元数据，底部缩略图条可快速跳转。
 
 ![灯箱查看器](docs/screenshots/lightbox-info.webp)
 
-### 表态系统
-> 访客可对照片进行 emoji 表态（👍❤️😍😂😮😢🔥✨），无需登录，基于指纹识别
+### 灯箱 · GPS 迷你地图
 
-![表态系统](docs/screenshots/reactions.webp)
+当照片包含 GPS 坐标时，信息面板顶部嵌入 Leaflet 迷你地图，实时显示拍摄位置。
+
+![GPS 迷你地图](docs/screenshots/lightbox-minimap.webp)
+
+### 灯箱 · 全屏模式
+
+点击 ℹ 按钮关闭信息面板后，照片自动铺满全屏居中展示。
+
+![全屏模式](docs/screenshots/lightbox-fullwidth.webp)
+
+### 表态系统
+
+访客可对照片进行 emoji 表态（👍❤️😍😂😮😢🔥✨），无需登录，基于指纹识别。
+
+| 表态选择器 | 表态已添加 |
+|:---:|:---:|
+| ![表态选择器](docs/screenshots/reactions.webp) | ![表态已添加](docs/screenshots/reaction-added.webp) |
 
 ### 照片地图
-> 基于 Leaflet 的全屏地图，展示带 GPS 坐标的照片位置，支持聚合标记
 
-![照片地图](docs/screenshots/map.webp)
+基于 Leaflet + OpenStreetMap 的全屏地图，展示带 GPS 坐标的照片位置，支持聚合标记。
+
+| 地图标记 | 标记弹窗 |
+|:---:|:---:|
+| ![地图标记](docs/screenshots/map-markers.webp) | ![标记弹窗](docs/screenshots/map-popup.webp) |
 
 ### 后台管理
-> ChronoFrame 风格侧栏导航，仪表盘统计，拖拽上传，照片管理
+
+ChronoFrame 风格侧栏导航，仪表盘统计，拖拽上传，照片/分类管理。
 
 ![后台管理](docs/screenshots/admin.webp)
 
@@ -48,49 +70,64 @@
 
 ## ✨ 特性
 
-### 🎨 精美的前端展示
-- **瀑布流布局** — 5/4/3/2列自适应，4px 紧凑间距
+### 🎨 前端展示
+- **瀑布流布局** — 5/4/3/2 列自适应，4px 紧凑间距
 - **暗色模式默认** — ChronoFrame 风格中性配色
 - **侧栏图标导航** — SVG 简笔画图标，极简设计
 - **灯箱查看器** — 全屏查看 + 右侧信息面板 + 底部缩略图导航
+- **GPS 迷你地图** — 信息面板嵌入 Leaflet 地图显示拍摄位置
 - **表态系统** — 8 种 emoji 表态，指纹识别匿名用户
 - **分享链接** — 一键复制照片直链（`?photo=ID`），支持 Deep Link
 - **分类筛选** — 按分类快速筛选，横向滑动支持
 - **搜索功能** — 搜索标题、描述、标签、位置
-- **黑夜模式** — 一键切换，记忆用户偏好
+- **亮暗切换** — 一键切换，记忆用户偏好
 
 ### 📱 移动端友好
-- **响应式导航** — 移动端底部栏布局
-- **触摸友好** — 卡片触摸交互，灯箱触摸滑动
-- **底部信息弹窗** — 移动端信息面板自适应为底部弹出
-- **横向分类滚动** — 分类过多时自动横向滚动
+- 移动端底部栏导航
+- 卡片触摸交互，灯箱触摸滑动
+- 移动端信息面板自适应为底部弹出
+- 分类横向滚动
 
-### ⚙️ 强大的后台管理
-- **侧栏导航** — 仪表盘、分类管理、网站设置、地图、前台
-- **拖拽上传** — 批量上传，实时进度
-- **EXIF 自动提取** — 相机/手机照片元数据兼容
-- **Live Photo 上传** — 同时上传照片和配套视频
-- **分类管理** — 创建、编辑、删除分类
+### ⚙️ 后台管理
+- 侧栏导航：仪表盘、分类管理、网站设置、地图、前台
+- 拖拽上传，批量上传，实时进度
+- EXIF 自动提取 + 手动编辑
+- Live Photo 上传（照片 + 配套视频）
 
 ### 📍 照片地图
-- **Leaflet 地图** — OpenStreetMap 瓦片，无需 API Key
-- **照片标记** — 缩略图标记 + 弹出详情卡
-- **聚合标记** — 密集区域自动聚合
-- **缩放控制** — 放大/缩小/重置
+- Leaflet + OpenStreetMap，无需 API Key
+- 照片缩略图标记 + 弹出详情卡
+- 密集区域聚合标记
+- 缩放控制 + 重置
+
+### 📸 EXIF 元数据
+
+兼容相机（Nikon / Canon / Sony / Fujifilm）和手机（iPhone / Android），提取字段：
+
+| 字段 | 说明 |
+|------|------|
+| 品牌 / 型号 | Camera Make / Model |
+| 镜头型号 | Lens Model |
+| 焦距 / 光圈 / 快门 / ISO | Focal / Aperture / Shutter / ISO |
+| GPS 坐标 | 纬度 / 经度（自动过滤 0,0） |
+| 拍摄时间 | DateTimeOriginal |
+| 软件 / 固件 | Software |
+| 白平衡 / 闪光灯 | White Balance / Flash |
+| 曝光模式 / 测光模式 | Exposure / Metering |
+| 曝光补偿 / 色彩空间 | Exposure Bias / Color Space |
+| 场景类型 / 方向 | Scene Type / Orientation |
+
+缩略图生成时自动根据 EXIF 方向旋转。
+
+### 🎬 Live Photo
+- 上传时附加配套 `.mov` 视频
+- 前端 LIVE 徽章标识
+- API 支持 `live_photo` 字段
 
 ### 🔧 灵活配置
 - **多数据库** — SQLite（默认）、MySQL、PostgreSQL
-- **多存储** — 本地、AWS S3、MinIO、阿里云 OSS
+- **多存储** — 本地（默认）、AWS S3、MinIO、阿里云 OSS
 - **云端缩略图** — 所有存储后端支持缩略图自动上传
-
-### 📸 EXIF 元数据
-- 兼容相机（Sony/Canon/Nikon）和手机（iPhone/Android）
-- 提取字段：品牌、型号、镜头、焦距、光圈、快门、ISO、GPS、白平衡、闪光灯、曝光模式、测光模式等
-- EXIF 方向自动旋转缩略图
-
-### 🎬 Live Photo
-- 上传配套 `.mov` 视频
-- 前端 LIVE 徽章标识
 
 ---
 
@@ -113,10 +150,12 @@ go run main.go
 ```
 
 访问：
-- 📷 **前台**：http://localhost:8080
-- ⚙️ **后台**：http://localhost:8080/admin
-- 🗺️ **地图**：http://localhost:8080/map.html
-- 👤 **默认账号**：`admin` / `admin123`
+| 页面 | 地址 |
+|------|------|
+| 📷 前台画廊 | http://localhost:8080 |
+| ⚙️ 后台管理 | http://localhost:8080/admin |
+| 🗺️ 照片地图 | http://localhost:8080/map.html |
+| 👤 默认账号 | `admin` / `admin123` |
 
 ### Docker 部署
 
@@ -128,16 +167,18 @@ docker compose build && docker compose up -d
 ### Makefile
 
 ```bash
-make help    # 所有可用命令
+make help    # 所有命令
 make run     # 运行
 make build   # 编译
 make test    # 测试
-make dev     # 热重载开发模式
+make dev     # 热重载
 ```
 
 ---
 
-## 🔧 配置详解
+## 🔧 配置
+
+配置文件 `config.yaml`，从 `config.example.yaml` 复制修改。
 
 ### 数据库
 
@@ -199,7 +240,7 @@ storage:
 
 ---
 
-## 🌐 API 接口
+## 🌐 API
 
 ### 公开接口
 
@@ -209,7 +250,7 @@ storage:
 | GET | `/api/photos/:id` | 照片详情 |
 | GET | `/api/categories` | 分类列表 |
 | GET | `/api/settings` | 网站设置 |
-| GET | `/api/photos/:id/reactions` | 获取表态统计 |
+| GET | `/api/photos/:id/reactions` | 表态统计 |
 | POST | `/api/photos/:id/reactions` | 添加/更新表态 |
 | DELETE | `/api/photos/:id/reactions` | 删除表态 |
 | GET | `/health` | 健康检查 |
@@ -219,19 +260,18 @@ storage:
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | `/api/auth/login` | 登录 |
-| POST | `/api/photos` | 上传照片（支持 Live Photo） |
-| PUT | `/api/photos/:id` | 更新照片信息 |
+| POST | `/api/photos` | 上传照片（支持 `live_photo` 字段） |
+| PUT | `/api/photos/:id` | 更新照片 |
 | DELETE | `/api/photos/:id` | 删除照片 |
 | POST | `/api/categories` | 创建分类 |
-| PUT | `/api/categories/:id` | 更新分类 |
-| DELETE | `/api/categories/:id` | 删除分类 |
+| PUT / DELETE | `/api/categories/:id` | 更新 / 删除分类 |
 
 ---
 
-## 🚀 部署方式
+## 🚀 部署
 
 <details>
-<summary>二进制直接运行</summary>
+<summary>二进制运行</summary>
 
 ```bash
 go build -o mygallery main.go
@@ -266,14 +306,11 @@ server {
 [Unit]
 Description=MYGallery
 After=network.target
-
 [Service]
 Type=simple
-User=www-data
 WorkingDirectory=/opt/mygallery
 ExecStart=/opt/mygallery/mygallery
 Restart=on-failure
-
 [Install]
 WantedBy=multi-user.target
 ```
@@ -283,254 +320,10 @@ WantedBy=multi-user.target
 
 ## 🔒 安全建议
 
-1. 修改默认密码
-2. 修改 `config.yaml` 中的 JWT 密钥
-3. 生产环境启用 HTTPS
-4. 配置防火墙
-5. 定期备份 `data/` 和 `uploads/`
-#### AWS S3
-
-```yaml
-storage:
-  type: "s3"
-  s3:
-    region: "us-east-1"
-    bucket: "mygallery"
-    access_key: "YOUR_ACCESS_KEY"
-    secret_key: "YOUR_SECRET_KEY"
-    endpoint: ""              # 留空使用 AWS 默认，或自定义
-    url_prefix: "https://your-bucket.s3.amazonaws.com"
-```
-
-#### MinIO（S3 兼容的自建对象存储）
-
-```yaml
-storage:
-  type: "minio"
-  minio:
-    endpoint: "localhost:9000"
-    bucket: "mygallery"
-    access_key: "minioadmin"
-    secret_key: "minioadmin"
-    use_ssl: false
-    url_prefix: "http://localhost:9000/mygallery"
-```
-
-#### 阿里云 OSS
-
-```yaml
-storage:
-  type: "aliyun"
-  aliyun:
-    endpoint: "oss-cn-hangzhou.aliyuncs.com"
-    bucket: "mygallery"
-    access_key: "YOUR_ACCESS_KEY"
-    secret_key: "YOUR_SECRET_KEY"
-    url_prefix: "https://mygallery.oss-cn-hangzhou.aliyuncs.com"
-```
-
-### JWT 与管理员配置
-
-```yaml
-jwt:
-  secret: "change-this-to-a-random-string"  # 生产环境务必修改！
-  expire_hours: 168  # Token 有效期（7天）
-
-admin:
-  username: "admin"
-  password: "admin123"  # 首次启动后自动加密
-  email: "admin@example.com"
-```
-
-### 图片处理配置
-
-```yaml
-image:
-  max_upload_size: 52428800  # 50MB
-  allowed_types:
-    - "image/jpeg"
-    - "image/png"
-    - "image/gif"
-    - "image/webp"
-  thumbnail:
-    width: 400
-    height: 400
-    quality: 85
-```
-
----
-
-## 📸 EXIF 元数据支持
-
-MYGallery 自动从上传的照片中提取 EXIF 元数据，兼容相机和手机拍摄的照片：
-
-| 字段 | 说明 | 相机 | iPhone | Android |
-|------|------|:----:|:------:|:-------:|
-| 相机品牌 | Camera Make | ✅ | ✅ | ✅ |
-| 相机型号 | Camera Model | ✅ | ✅ | ✅ |
-| 镜头型号 | Lens Model | ✅ | ✅ | 部分 |
-| 焦距 | Focal Length | ✅ | ✅ | ✅ |
-| 光圈 | F-Number | ✅ | ✅ | ✅ |
-| 快门速度 | Exposure Time | ✅ | ✅ | ✅ |
-| ISO | ISO Speed | ✅ | ✅ | ✅ |
-| 拍摄时间 | Date Taken | ✅ | ✅ | ✅ |
-| GPS 位置 | GPS Coordinates | ✅ | ✅ | ✅ |
-| 拍摄软件 | Software | ✅ | ✅ | ✅ |
-| 图片方向 | Orientation | ✅ | ✅ | ✅ |
-| 白平衡 | White Balance | ✅ | ✅ | ✅ |
-| 闪光灯 | Flash | ✅ | ✅ | ✅ |
-| 曝光模式 | Exposure Program | ✅ | ✅ | 部分 |
-| 测光模式 | Metering Mode | ✅ | ✅ | ✅ |
-| 曝光补偿 | Exposure Bias | ✅ | ✅ | ✅ |
-| 色彩空间 | Color Space | ✅ | ✅ | ✅ |
-
-> 缩略图生成时会自动根据 EXIF 方向标记旋转图片，确保显示方向正确。
-
----
-
-## 🎬 Live Photo 支持
-
-MYGallery 支持 Apple Live Photo 的上传和展示：
-
-- **上传**：在后台上传照片时，可同时上传配套的 `.mov` 视频文件
-- **展示**：前端照片卡片左上角显示 `LIVE` 徽章
-- **API**：通过 `POST /api/photos` 的 `live_photo` 字段上传视频
-
-```bash
-# 上传 Live Photo 示例
-curl -X POST http://localhost:8080/api/photos \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -F "photo=@IMG_1234.jpg" \
-  -F "live_photo=@IMG_1234.mov" \
-  -F "title=我的 Live Photo"
-```
-
----
-
-## 🌐 API 接口
-
-### 公开接口
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/photos` | 获取照片列表（支持 `page`、`size`、`category`、`search` 参数） |
-| GET | `/api/photos/:id` | 获取单张照片详情 |
-| GET | `/api/categories` | 获取分类列表 |
-| GET | `/api/settings` | 获取网站设置 |
-| GET | `/health` | 健康检查 |
-
-### 需认证接口（需要 `Authorization: Bearer <token>` 头）
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/auth/login` | 管理员登录 |
-| POST | `/api/auth/change-password` | 修改密码 |
-| POST | `/api/photos` | 上传照片（支持 Live Photo） |
-| PUT | `/api/photos/:id` | 更新照片信息 |
-| DELETE | `/api/photos/:id` | 删除照片 |
-| POST | `/api/categories` | 创建分类 |
-| PUT | `/api/categories/:id` | 更新分类 |
-| DELETE | `/api/categories/:id` | 删除分类 |
-| PUT | `/api/settings` | 更新网站设置 |
-
----
-
-## 🚀 部署指南
-
-### 方式一：直接运行二进制
-
-```bash
-# 编译
-go build -o mygallery main.go
-
-# 创建配置
-cp config.example.yaml config.yaml
-# 编辑 config.yaml
-
-# 创建目录
-mkdir -p data uploads uploads/thumbnails
-
-# 运行
-./mygallery
-```
-
-### 方式二：Docker Compose（推荐）
-
-```bash
-cp config.example.yaml config.yaml
-docker compose build
-docker compose up -d
-```
-
-### 方式三：Nginx 反向代理
-
-```nginx
-server {
-    listen 80;
-    server_name gallery.example.com;
-    client_max_body_size 50M;
-
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-### 方式四：Systemd 服务
-
-```ini
-# /etc/systemd/system/mygallery.service
-[Unit]
-Description=MYGallery Photo Gallery
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/opt/mygallery
-ExecStart=/opt/mygallery/mygallery
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl enable mygallery
-sudo systemctl start mygallery
-```
-
----
-
-## 🔒 安全建议
-
-1. **修改默认密码** — 首次登录后立即修改
-2. **修改 JWT 密钥** — `config.yaml` 中的 `jwt.secret`
-3. **启用 HTTPS** — 生产环境使用 Nginx + Let's Encrypt
-4. **配置防火墙** — 只开放必要端口
-5. **定期备份数据** — 备份 `data/` 和 `uploads/` 目录
-
----
-
-## 🛠️ 技术栈
-
-| 组件 | 技术 |
-|------|------|
-| 后端框架 | Go + Gin |
-| ORM | GORM |
-| 认证 | JWT (golang-jwt) |
-| EXIF 解析 | rwcarlsen/goexif |
-| 图片处理 | disintegration/imaging |
-| 数据库 | SQLite / MySQL / PostgreSQL |
-| 对象存储 | Local / AWS S3 / MinIO / 阿里云 OSS |
-| 前端 | 原生 JavaScript + Tailwind CSS + lightGallery |
-
----
+1. 修改默认密码和 JWT 密钥
+2. 生产环境启用 HTTPS
+3. 配置防火墙
+4. 定期备份 `data/` 和 `uploads/`
 
 ## 🛠️ 技术栈
 
@@ -539,19 +332,18 @@ sudo systemctl start mygallery
 | 后端 | Go + Gin + GORM |
 | 认证 | JWT |
 | EXIF | rwcarlsen/goexif |
-| 图片处理 | disintegration/imaging |
+| 图片 | disintegration/imaging |
 | 数据库 | SQLite / MySQL / PostgreSQL |
-| 存储 | Local / S3 / MinIO / 阿里云 OSS |
+| 存储 | Local / S3 / MinIO / Aliyun OSS |
 | 前端 | Vanilla JS + Tailwind CSS |
 | 地图 | Leaflet + OpenStreetMap |
 
-## 📄 许可证
+## 📄 License
 
-MIT License
+MIT
 
 ---
 
 <div align="center">
   <p>Made with ❤️ by MYGallery</p>
-  <p>如果这个项目对你有帮助，请给个 ⭐ Star 吧！</p>
 </div>

@@ -2,7 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>MYGallery - 我的照片墙</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery.min.css" rel="stylesheet">
@@ -14,781 +16,508 @@
             --bg-secondary: #ffffff;
             --text-primary: #1f2937;
             --text-secondary: #6b7280;
-            --glass-bg: rgba(255, 255, 255, 0.25);
-            --glass-border: rgba(255, 255, 255, 0.18);
-            --shadow: rgba(0, 0, 0, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --shadow: rgba(0, 0, 0, 0.08);
+            --accent: #3b82f6;
+            --accent-light: rgba(59, 130, 246, 0.1);
         }
-        
+
         .dark-mode {
-            --bg-primary: #1a202c;
-            --bg-secondary: #2d3748;
-            --text-primary: #f7fafc;
-            --text-secondary: #cbd5e0;
-            --glass-bg: rgba(45, 55, 72, 0.25);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --shadow: rgba(0, 0, 0, 0.3);
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --glass-bg: rgba(30, 41, 59, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --shadow: rgba(0, 0, 0, 0.4);
+            --accent: #60a5fa;
+            --accent-light: rgba(96, 165, 250, 0.15);
         }
-        
+
+        * { box-sizing: border-box; }
+
         body {
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%) !important;
-            color: var(--text-primary) !important;
-            transition: all 0.3s ease;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.4s ease, color 0.3s ease;
             min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode p {
-            color: var(--text-primary) !important;
-        }
-        
-        .dark-mode .text-gray-800 {
-            color: var(--text-primary) !important;
-        }
-        
-        .dark-mode .text-gray-600 {
-            color: var(--text-secondary) !important;
-        }
-        
+
+        .dark-mode .text-gray-800, .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode p { color: var(--text-primary) !important; }
+        .dark-mode .text-gray-600, .dark-mode .text-gray-700, .dark-mode .text-gray-500 { color: var(--text-secondary) !important; }
+
         .glass-effect {
             background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
         }
-        
+
         .photo-card {
             break-inside: avoid;
             page-break-inside: avoid;
             position: relative;
+            margin-bottom: 16px;
         }
-        
+
+        .photo-card .card-inner {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            background: var(--bg-secondary);
+        }
+
+        .photo-card .card-inner:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
         .photo-description {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 20px;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
+            padding: 40px 16px 16px;
             color: white;
             opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        
-        .photo-card:hover .photo-description {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        
-        .masonry-grid {
-            column-count: 4;
-            column-gap: 20px;
-        }
-        
-        @media (max-width: 1200px) {
-            .masonry-grid { column-count: 3; }
-        }
-        
-        @media (max-width: 768px) {
-            .masonry-grid { column-count: 2; }
-        }
-        
-        @media (max-width: 480px) {
-            .masonry-grid { column-count: 1; }
-        }
-        
+
+        .photo-card .card-inner:hover .photo-description,
+        .photo-card.touch-active .photo-description { opacity: 1; }
+
         .photo-card img {
-            transition: transform 0.3s ease;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: block;
         }
-        
-        .photo-card:hover img {
-            transform: scale(1.03);
-        }
-        
-        .skeleton {
-            animation: skeleton-loading 1s linear infinite alternate;
-        }
-        
-        @keyframes skeleton-loading {
-            0% { background-color: hsl(200, 20%, 80%); }
-            100% { background-color: hsl(200, 20%, 95%); }
-        }
-        
-        /* 懒加载图片样式 */
-        .lazy-image {
-            opacity: 0;
-            transition: opacity 0.3s ease-in;
-        }
-        
-        .lazy-loaded {
-            opacity: 1;
-        }
-        
-        /* lightGallery 毛玻璃效果 */
-        .lg-backdrop {
-            background-color: rgba(0, 0, 0, 0.7) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-        }
-        
-        .lg-outer {
-            backdrop-filter: blur(10px);
-        }
-        
-        .lg-sub-html {
-            background: rgba(0, 0, 0, 0.6) !important;
-            backdrop-filter: blur(15px) !important;
-            -webkit-backdrop-filter: blur(15px) !important;
-        }
-        
-        /* 分类按钮样式 */
+        .photo-card .card-inner:hover img { transform: scale(1.05); }
+
+        .masonry-grid { column-count: 4; column-gap: 16px; padding: 0 4px; }
+        @media (max-width: 1200px) { .masonry-grid { column-count: 3; } }
+        @media (max-width: 768px)  { .masonry-grid { column-count: 2; column-gap: 10px; } }
+        @media (max-width: 480px)  { .masonry-grid { column-count: 2; column-gap: 8px; } }
+
+        .lazy-image { opacity: 0; transition: opacity 0.5s ease-in; }
+        .lazy-loaded { opacity: 1; }
+
+        .lg-backdrop { background-color: rgba(0, 0, 0, 0.85) !important; backdrop-filter: blur(30px) !important; -webkit-backdrop-filter: blur(30px) !important; }
+        .lg-sub-html { background: rgba(0, 0, 0, 0.5) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; }
+
         .category-btn {
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .category-btn:hover {
-            background: rgba(255, 255, 255, 0.5);
-            transform: translateY(-2px);
-        }
-        
-        .category-btn.active {
-            background: rgba(59, 130, 246, 0.9);
-            color: white;
-            border-color: rgba(59, 130, 246, 1);
-        }
-        
-        /* 搜索栏动画 */
-        #search-bar {
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* 元数据侧边栏样式 */
-        .lg-components .lg-exif-sidebar {
-            position: fixed;
-            right: 0;
-            top: 0;
-            width: 320px;
-            height: 100vh;
-            background: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            color: white;
-            padding: 80px 24px 24px;
-            overflow-y: auto;
-            z-index: 1086;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            box-shadow: -2px 0 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .lg-components .lg-exif-sidebar.show {
-            transform: translateX(0);
-        }
-        
-        .lg-exif-section {
-            margin-bottom: 24px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .lg-exif-section:last-child {
-            border-bottom: none;
-        }
-        
-        .lg-exif-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #fff;
-        }
-        
-        .lg-exif-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
+            background: var(--accent-light);
+            border: 1.5px solid transparent;
+            color: var(--text-primary);
+            font-weight: 500;
             font-size: 14px;
+            padding: 8px 20px;
+            border-radius: 999px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        
-        .lg-exif-label {
-            color: rgba(255, 255, 255, 0.6);
-            margin-right: 12px;
-            flex-shrink: 0;
+        .category-btn:hover { background: var(--accent); color: white; transform: translateY(-1px); }
+        .category-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); }
+
+        .live-badge {
+            position: absolute; top: 8px; left: 8px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            color: #fff; font-size: 11px; font-weight: 600;
+            padding: 3px 8px; border-radius: 6px;
+            display: flex; align-items: center; gap: 4px;
+            z-index: 5;
         }
-        
-        .lg-exif-value {
-            color: #fff;
-            text-align: right;
-            word-break: break-word;
-        }
-        
-        .lg-exif-icon {
-            margin-right: 6px;
-        }
-        
-        /* 关闭按钮 */
-        .lg-exif-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 36px;
-            height: 36px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+        .live-badge::before { content: ''; width: 6px; height: 6px; background: #f43f5e; border-radius: 50%; animation: livePulse 1.5s infinite; }
+        @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        #search-bar { animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .scroll-top {
+            position: fixed; bottom: 24px; right: 24px;
+            width: 48px; height: 48px;
+            background: var(--accent); color: white;
+            border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            opacity: 0; transform: translateY(20px);
             transition: all 0.3s ease;
+            z-index: 40;
+            -webkit-tap-highlight-color: transparent;
         }
-        
-        .lg-exif-close:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .scroll-top.visible { opacity: 1; transform: translateY(0); }
+        .scroll-top:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5); }
+
+        .mobile-menu-btn {
+            display: none; padding: 8px; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: flex; align-items: center; }
+            .desktop-nav { display: none !important; }
+            .mobile-nav {
+                position: fixed; top: 64px; left: 0; right: 0;
+                background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--glass-border);
+                padding: 16px 24px; z-index: 45;
+                transform: translateY(-100%); opacity: 0;
+                transition: all 0.3s ease;
+            }
+            .mobile-nav.open { transform: translateY(0); opacity: 1; }
+            .hero-title { font-size: 1.75rem !important; }
+            .photo-card { margin-bottom: 10px; }
+            .photo-card .card-inner { border-radius: 12px; }
+            .photo-description { padding: 30px 12px 12px; }
+            .photo-description h3 { font-size: 14px !important; }
+            .photo-description p { font-size: 11px !important; }
+        }
+
+        footer { color: var(--text-secondary); }
+
+        .exif-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: rgba(255,255,255,0.15); border-radius: 999px; font-size: 13px; backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
+<body>
     <!-- 顶部导航 -->
-    <header class="glass-effect fixed top-0 left-0 right-0 z-50 shadow-lg">
-        <div class="max-w-7xl mx-auto px-6 py-4">
+    <header class="glass-effect fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
             <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="text-3xl">📷</div>
-                    <h1 class="text-2xl font-bold text-gray-800">MYGallery</h1>
-                </div>
-                <nav class="hidden md:flex items-center space-x-6">
-                    <a href="#" class="text-gray-700 hover:text-blue-600 transition">首页</a>
-                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-200 transition" title="切换主题">
-                        <span class="text-2xl">🌙</span>
+                <a href="/" class="flex items-center space-x-2 no-underline">
+                    <span class="text-2xl sm:text-3xl">📷</span>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-800">MYGallery</h1>
+                </a>
+                <nav class="desktop-nav flex items-center space-x-6">
+                    <a href="#" class="text-gray-700 hover:text-blue-600 transition font-medium">首页</a>
+                    <button id="theme-toggle" class="p-2 rounded-xl hover:bg-gray-200/50 transition" title="切换主题">
+                        <span class="text-xl">🌙</span>
                     </button>
                 </nav>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="菜单">
+                    <svg id="menu-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
             </div>
         </div>
     </header>
 
+    <!-- 移动端导航 -->
+    <div id="mobile-nav" class="mobile-nav">
+        <div class="flex flex-col space-y-4">
+            <a href="#" class="text-gray-700 font-medium text-lg">首页</a>
+            <button onclick="toggleTheme()" class="text-left text-gray-700 font-medium text-lg flex items-center gap-2">
+                <span id="mobile-theme-icon">🌙</span> 切换主题
+            </button>
+        </div>
+    </div>
+
     <!-- 主内容区 -->
-    <main class="max-w-7xl mx-auto px-6 pt-24 pb-12">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-12">
         <!-- 标题区域 -->
-        <div class="text-center mb-8">
-            <h2 class="text-4xl font-bold text-gray-800 mb-3">精选时刻 · 美好回忆</h2>
-            <p class="text-gray-600" id="photo-count">共 0 张照片</p>
+        <div class="text-center mb-6 sm:mb-8">
+            <h2 class="hero-title text-3xl sm:text-4xl font-bold text-gray-800 mb-2">精选时刻 · 美好回忆</h2>
+            <p class="text-gray-600 text-sm sm:text-base" id="photo-count">共 0 张照片</p>
         </div>
 
-        <!-- 筛选和搜索栏 -->
-        <div class="mb-8">
-            <!-- 分类筛选 -->
-            <div class="flex flex-wrap items-center justify-center gap-3 mb-4" id="category-filter">
-                <button onclick="filterByCategory('')" class="category-btn active px-4 py-2 rounded-full transition">
-                    全部
-                </button>
-                <!-- 其他分类按钮通过 JS 生成 -->
+        <!-- 分类筛选 -->
+        <div class="mb-6 sm:mb-8">
+            <div class="flex flex-nowrap items-center justify-start sm:justify-center gap-2 sm:gap-3 mb-4 overflow-x-auto pb-2 px-1 scrollbar-hide" id="category-filter" style="-webkit-overflow-scrolling: touch; scrollbar-width: none;">
+                <button onclick="filterByCategory('')" class="category-btn active">全部</button>
             </div>
 
-            <!-- 搜索栏 -->
             <div class="flex justify-center">
                 <div class="relative w-full max-w-2xl">
-                    <button id="search-toggle" onclick="toggleSearch()" 
-                            class="glass-effect px-4 py-2 rounded-full hover:shadow-lg transition">
+                    <button id="search-toggle" onclick="toggleSearch()" class="category-btn flex items-center gap-2">
                         🔍 搜索照片
                     </button>
-                    
-                    <div id="search-bar" class="hidden mt-3 glass-effect rounded-2xl p-4 shadow-lg">
+                    <div id="search-bar" class="hidden mt-3 rounded-2xl p-4 shadow-lg" style="background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border);">
                         <div class="relative">
-                            <input type="text" id="search-input" 
+                            <input type="text" id="search-input"
                                    placeholder="搜索标题、描述、标签、位置..."
-                                   class="w-full px-4 py-3 pr-24 border-0 bg-white bg-opacity-50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                   class="w-full px-4 py-3 pr-24 border-0 rounded-xl outline-none text-sm sm:text-base"
+                                   style="background: var(--bg-secondary); color: var(--text-primary);"
                                    onkeyup="handleSearch(event)">
                             <div class="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-2">
-                                <button type="button" onclick="performSearch()" 
-                                        class="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                                    搜索
-                                </button>
-                                <button type="button" onclick="clearSearch()" 
-                                        class="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">
-                                    清除
-                                </button>
+                                <button type="button" onclick="performSearch()" class="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">搜索</button>
+                                <button type="button" onclick="clearSearch()" class="px-3 py-1.5 text-sm rounded-lg transition" style="background: var(--accent-light); color: var(--text-primary);">清除</button>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-600 mt-2">支持搜索标题、描述、标签、位置等信息</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 加载状态 -->
         <div id="loading" class="flex justify-center items-center py-20">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+            <div class="animate-spin rounded-full h-12 w-12 border-[3px] border-blue-200 border-t-blue-600"></div>
         </div>
-
-        <!-- 照片墙 -->
         <div id="photo-wall" class="masonry-grid hidden"></div>
-
-        <!-- 空状态 -->
         <div id="empty-state" class="hidden text-center py-20">
             <div class="text-6xl mb-4">📸</div>
             <h3 class="text-2xl font-semibold text-gray-700 mb-2">还没有照片</h3>
             <p class="text-gray-500">敬请期待更多精彩照片</p>
         </div>
-
-        <!-- 加载更多 -->
         <div id="load-more" class="hidden text-center mt-8">
-            <button onclick="loadMore()" class="px-8 py-3 bg-white shadow-lg rounded-lg hover:shadow-xl transition">
-                加载更多
-            </button>
+            <button onclick="loadMore()" class="px-8 py-3 rounded-xl font-medium transition" style="background: var(--bg-secondary); box-shadow: 0 2px 12px var(--shadow); color: var(--text-primary);">加载更多</button>
         </div>
     </main>
 
-    <!-- 页脚 -->
-    <footer class="text-center py-8 text-gray-600">
-        <p>© 2025 MYGallery - 个人照片展示与管理系统</p>
-        <p class="text-sm mt-2">Powered by MYGallery v2.0</p>
+    <footer class="text-center py-8">
+        <p class="text-sm">© <script>document.write(new Date().getFullYear())</script> MYGallery - 个人照片展示与管理系统</p>
     </footer>
 
-    <!-- lightGallery -->
+    <button class="scroll-top" id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script>
 
     <script>
         const API_BASE = '/api';
-        let currentPage = 1;
-        let totalPhotos = 0;
-        let isLoading = false;
-        let allPhotos = []; // 存储所有照片数据
-        let currentCategory = ''; // 当前筛选分类
-        let currentSearch = ''; // 当前搜索关键词
+        let currentPage = 1, totalPhotos = 0, isLoading = false;
+        let allPhotos = [], currentCategory = '', currentSearch = '';
+        const isTouchDevice = 'ontouchstart' in window;
 
-        // 加载分类列表
+        // Mobile menu
+        function toggleMobileMenu() {
+            document.getElementById('mobile-nav').classList.toggle('open');
+        }
+
+        // Theme
+        function initThemeToggle() {
+            const saved = localStorage.getItem('theme') || 'light';
+            if (saved === 'dark') applyDark(true);
+            document.getElementById('theme-toggle')?.addEventListener('click', () => toggleTheme());
+        }
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            applyDark(isDark);
+        }
+        function applyDark(isDark) {
+            if (isDark) document.body.classList.add('dark-mode');
+            const icon = isDark ? '☀️' : '🌙';
+            const t = document.querySelector('#theme-toggle span'); if (t) t.textContent = icon;
+            const m = document.getElementById('mobile-theme-icon'); if (m) m.textContent = icon;
+        }
+
+        // Scroll to top
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('scroll-top');
+            btn.classList.toggle('visible', window.scrollY > 400);
+        });
+
+        // Categories
         async function loadCategories() {
             try {
-                const response = await fetch(`${API_BASE}/categories`);
-                const categories = await response.json();
-                
-                const filterEl = document.getElementById('category-filter');
-                const buttons = categories.map(cat => `
-                    <button onclick="filterByCategory('${cat.name}')" 
-                            class="category-btn px-4 py-2 rounded-full transition"
-                            data-category="${cat.name}">
-                        ${cat.name} ${cat.photo_count > 0 ? `(${cat.photo_count})` : ''}
-                    </button>
-                `).join('');
-                
-                filterEl.innerHTML = `
-                    <button onclick="filterByCategory('')" class="category-btn active px-4 py-2 rounded-full transition">
-                        全部
-                    </button>
-                    ${buttons}
-                `;
-            } catch (error) {
-                console.log('加载分类失败:', error);
-            }
+                const res = await fetch(`${API_BASE}/categories`);
+                const categories = await res.json();
+                const el = document.getElementById('category-filter');
+                el.innerHTML = `<button onclick="filterByCategory('')" class="category-btn active">全部</button>` +
+                    categories.map(c => `<button onclick="filterByCategory('${c.name}')" class="category-btn" data-category="${c.name}">${c.name}</button>`).join('');
+            } catch (e) { console.log('加载分类失败:', e); }
         }
 
-        // 按分类筛选
-        function filterByCategory(category) {
-            currentCategory = category;
-            currentPage = 1;
-            
-            // 更新按钮状态
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if ((category === '' && btn.textContent.includes('全部')) || 
-                    btn.dataset.category === category) {
-                    btn.classList.add('active');
-                }
+        function filterByCategory(cat) {
+            currentCategory = cat; currentPage = 1;
+            document.querySelectorAll('.category-btn').forEach(b => {
+                b.classList.toggle('active', (cat === '' && b.textContent.includes('全部')) || b.dataset.category === cat);
             });
-            
             loadPhotos(1);
         }
 
-        // 切换搜索栏
         function toggleSearch() {
-            const searchBar = document.getElementById('search-bar');
-            searchBar.classList.toggle('hidden');
-            if (!searchBar.classList.contains('hidden')) {
-                document.getElementById('search-input').focus();
-            }
+            const bar = document.getElementById('search-bar');
+            bar.classList.toggle('hidden');
+            if (!bar.classList.contains('hidden')) document.getElementById('search-input').focus();
         }
 
-        // 处理搜索（回车键）
-        function handleSearch(event) {
-            if (event.key === 'Enter') {
-                performSearch();
-            } else {
-                // 防抖搜索：300ms 后自动搜索
-                debouncedSearch();
-            }
-        }
-
-        // 搜索防抖
         let searchTimer;
-        function debouncedSearch() {
+        function handleSearch(e) {
+            if (e.key === 'Enter') { performSearch(); return; }
             clearTimeout(searchTimer);
             searchTimer = setTimeout(() => {
-                const keyword = document.getElementById('search-input').value.trim();
-                if (keyword.length > 0) {
-                    performSearch();
-                }
-            }, 300); // 300ms 防抖
+                if (document.getElementById('search-input').value.trim().length > 0) performSearch();
+            }, 300);
         }
-
-        // 执行搜索
         function performSearch() {
-            clearTimeout(searchTimer); // 清除防抖计时器
+            clearTimeout(searchTimer);
             currentSearch = document.getElementById('search-input').value.trim();
-            currentPage = 1;
-            loadPhotos(1);
+            currentPage = 1; loadPhotos(1);
         }
-
-        // 清除搜索
         function clearSearch() {
             document.getElementById('search-input').value = '';
-            currentSearch = '';
-            loadPhotos(1);
+            currentSearch = ''; loadPhotos(1);
         }
 
-        // 加载照片
         async function loadPhotos(page = 1) {
-            if (isLoading) return;
-            isLoading = true;
-
+            if (isLoading) return; isLoading = true;
             try {
                 let url = `${API_BASE}/photos?page=${page}&size=20`;
-                
-                // 添加分类筛选
-                if (currentCategory) {
-                    url += `&category=${encodeURIComponent(currentCategory)}`;
-                }
-                
-                // 添加搜索关键词
-                if (currentSearch) {
-                    url += `&search=${encodeURIComponent(currentSearch)}`;
-                }
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const data = await response.json();
-                console.log('加载照片数据:', data); // 调试日志
-
+                if (currentCategory) url += `&category=${encodeURIComponent(currentCategory)}`;
+                if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
                 totalPhotos = data.total;
-                const countText = currentCategory 
-                    ? `${currentCategory} 分类: ${totalPhotos} 张照片`
-                    : currentSearch 
-                        ? `搜索结果: ${totalPhotos} 张照片`
-                        : `共 ${totalPhotos} 张照片`;
-                document.getElementById('photo-count').textContent = countText;
-
-                if (data.photos && data.photos.length > 0) {
-                    if (page === 1) {
-                        allPhotos = data.photos;
-                    } else {
-                        allPhotos = [...allPhotos, ...data.photos];
-                    }
-                    
+                const ct = currentCategory ? `${currentCategory} 分类: ${totalPhotos} 张照片`
+                    : currentSearch ? `搜索结果: ${totalPhotos} 张照片`
+                    : `共 ${totalPhotos} 张照片`;
+                document.getElementById('photo-count').textContent = ct;
+                if (data.photos?.length > 0) {
+                    allPhotos = page === 1 ? data.photos : [...allPhotos, ...data.photos];
                     renderPhotos(data.photos, page === 1);
                     document.getElementById('photo-wall').classList.remove('hidden');
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('empty-state').classList.add('hidden');
-
-                    // 显示加载更多按钮
-                    if (data.photos.length === 20 && data.total > page * 20) {
-                        document.getElementById('load-more').classList.remove('hidden');
-                    } else {
-                        document.getElementById('load-more').classList.add('hidden');
-                    }
+                    document.getElementById('load-more').classList.toggle('hidden', !(data.photos.length === 20 && data.total > page * 20));
                 } else if (page === 1) {
                     document.getElementById('empty-state').classList.remove('hidden');
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('photo-wall').classList.add('hidden');
                 }
-            } catch (error) {
-                console.error('加载照片失败:', error);
-                document.getElementById('loading').innerHTML = `
-                    <div class="text-center py-12">
-                        <div class="text-6xl mb-4">😢</div>
-                        <p class="text-red-600 mb-4">加载照片失败: ${error.message}</p>
-                        <button onclick="loadPhotos(1)" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            重试
-                        </button>
-                    </div>
-                `;
-            } finally {
-                isLoading = false;
-            }
+            } catch (e) {
+                document.getElementById('loading').innerHTML = `<div class="text-center py-12"><div class="text-5xl mb-4">😢</div><p class="text-red-500 mb-4">加载失败: ${e.message}</p><button onclick="loadPhotos(1)" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">重试</button></div>`;
+            } finally { isLoading = false; }
         }
 
-        // 渲染照片（优化版：使用 DocumentFragment 批量插入）
         function renderPhotos(photos, replace = false) {
             const wall = document.getElementById('photo-wall');
-            
+            if (replace) wall.innerHTML = '';
+            const frag = document.createDocumentFragment();
+            photos.forEach(p => frag.appendChild(createPhotoCard(p)));
+            wall.appendChild(frag);
             if (replace) {
-                wall.innerHTML = '';
-            }
-
-            // 使用 DocumentFragment 减少重排
-            const fragment = document.createDocumentFragment();
-            photos.forEach(photo => {
-                const card = createPhotoCard(photo);
-                fragment.appendChild(card);
-            });
-            
-            // 批量插入 DOM（只触发一次重排）
-            wall.appendChild(fragment);
-
-            // 初始化 lightGallery
-            if (replace) {
-                const galleryEl = document.getElementById('photo-wall');
-                
-                // 使用 requestIdleCallback 延迟初始化，不阻塞主线程
-                const initLightGallery = () => {
+                const init = () => {
                     try {
-                        // 先销毁旧的实例（如果存在）
-                        if (window.lgInstance) {
-                            window.lgInstance.destroy();
-                        }
-                        
-                        // 创建新实例
-                        window.lgInstance = lightGallery(galleryEl, {
-                            selector: '.photo-item',
-                            plugins: [lgZoom, lgThumbnail],
-                            speed: 500,
-                            download: false
-                        });
-                        
-                        console.log('✅ lightGallery 初始化成功');
-                    } catch (error) {
-                        console.error('❌ lightGallery 初始化失败:', error);
-                    }
+                        if (window.lgInstance) window.lgInstance.destroy();
+                        window.lgInstance = lightGallery(wall, { selector: '.photo-item', plugins: [lgZoom, lgThumbnail], speed: 400, download: false });
+                    } catch (e) { console.error('lightGallery 初始化失败:', e); }
                 };
-                
-                // 在浏览器空闲时初始化
-                if ('requestIdleCallback' in window) {
-                    requestIdleCallback(initLightGallery);
-                } else {
-                    setTimeout(initLightGallery, 100);
-                }
+                'requestIdleCallback' in window ? requestIdleCallback(init) : setTimeout(init, 100);
             }
-            
-            // 初始化图片懒加载观察器
             initLazyLoad();
         }
 
-        // 创建照片卡片
         function createPhotoCard(photo) {
             const card = document.createElement('div');
-            card.className = 'photo-card photo-item mb-5 cursor-pointer';
+            card.className = 'photo-card photo-item';
             card.setAttribute('data-src', photo.url);
-            card.setAttribute('data-photo-id', photo.id); // 添加照片 ID
             card.setAttribute('data-sub-html', createPhotoInfo(photo));
+            if (isTouchDevice) {
+                card.addEventListener('touchstart', function() { this.classList.add('touch-active'); });
+                card.addEventListener('touchend', function() { setTimeout(() => this.classList.remove('touch-active'), 1500); });
+            }
 
-            const exifInfo = [];
-            if (photo.camera_model) exifInfo.push(photo.camera_model);
-            if (photo.aperture) exifInfo.push(photo.aperture);
-            if (photo.shutter_speed) exifInfo.push(photo.shutter_speed);
-            if (photo.iso) exifInfo.push(`ISO ${photo.iso}`);
+            const exif = [];
+            if (photo.camera_model) exif.push(photo.camera_model);
+            if (photo.aperture) exif.push(photo.aperture);
+            if (photo.shutter_speed) exif.push(photo.shutter_speed);
+            if (photo.iso) exif.push(`ISO ${photo.iso}`);
 
-            // 使用完整URL，添加API前缀
-            const imageUrl = photo.url.startsWith('http') ? photo.url : `/uploads/${photo.filename}`;
-            const thumbUrl = photo.thumbnail_url || imageUrl;
+            const imgUrl = photo.url?.startsWith('http') ? photo.url : `/uploads/${photo.filename}`;
+            const thumb = photo.thumbnail_url || imgUrl;
 
             card.innerHTML = `
-                <div class="relative overflow-hidden rounded-xl shadow-lg group">
-                    <img data-src="${thumbUrl}" 
-                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23f0f0f0' width='400' height='300'/%3E%3C/svg%3E"
-                         alt="${photo.title || photo.original_name}" 
-                         class="w-full h-auto object-cover lazy-image"
-                         loading="lazy"
-                         onerror="this.src='${imageUrl}'">
+                <div class="card-inner">
+                    ${photo.is_live_photo ? '<div class="live-badge">LIVE</div>' : ''}
+                    <img data-src="${thumb}"
+                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e2e8f0' width='400' height='300'/%3E%3C/svg%3E"
+                         alt="${photo.title || photo.original_name}"
+                         class="w-full h-auto lazy-image" loading="lazy"
+                         onerror="this.src='${imgUrl}'">
                     <div class="photo-description">
-                        <h3 class="font-semibold text-lg mb-1">${photo.title || photo.original_name}</h3>
-                        ${photo.description ? `<p class="text-sm text-gray-200 mb-2">${photo.description}</p>` : ''}
-                        ${exifInfo.length > 0 ? `<p class="text-xs text-gray-300">${exifInfo.join(' · ')}</p>` : ''}
-                        ${photo.location ? `<p class="text-xs text-gray-300 mt-1">📍 ${photo.location}</p>` : ''}
+                        <h3 class="font-semibold text-base sm:text-lg mb-1">${photo.title || photo.original_name}</h3>
+                        ${photo.description ? `<p class="text-sm text-gray-200 mb-1 line-clamp-2">${photo.description}</p>` : ''}
+                        ${exif.length ? `<p class="text-xs text-gray-300 opacity-80">${exif.join(' · ')}</p>` : ''}
+                        ${photo.location ? `<p class="text-xs text-gray-300 mt-1 opacity-80">📍 ${photo.location}</p>` : ''}
                     </div>
-                </div>
-            `;
-
+                </div>`;
             return card;
         }
 
-        // 创建照片详细信息（在灯箱底部显示）
         function createPhotoInfo(photo) {
-            let html = `<div style="max-width: 900px; margin: 0 auto; text-align: center;">`;
-            
-            // 标题和描述 - 居中
-            html += `<h4 class="text-2xl font-bold mb-3">${photo.title || photo.original_name}</h4>`;
-            if (photo.description) {
-                html += `<p class="mb-4 text-base">${photo.description}</p>`;
-            }
-            
-            // 主要信息 - 居中显示
-            html += '<div class="flex flex-wrap justify-center gap-4 mb-4">';
-            if (photo.location) {
-                html += `<span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">📍 ${photo.location}</span>`;
-            }
-            if (photo.category) {
-                html += `<span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">📁 ${photo.category}</span>`;
-            }
-            if (photo.date_taken) {
-                const date = new Date(photo.date_taken).toLocaleDateString('zh-CN');
-                html += `<span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">🕐 ${date}</span>`;
-            }
-            html += '</div>';
-            
-            // 相机参数 - 靠右对齐
-            html += '<div style="display: flex; justify-content: flex-end; gap: 24px; flex-wrap: wrap; margin-top: 16px;">';
-            
-            // 设备信息
-            if (photo.camera_make || photo.camera_model || photo.lens_model) {
-                html += '<div style="text-align: right;">';
-                html += '<p class="text-xs text-gray-300 mb-1">📸 设备</p>';
-                if (photo.camera_make && photo.camera_model) {
-                    html += `<p class="text-sm">${photo.camera_make} ${photo.camera_model}</p>`;
-                }
-                if (photo.lens_model) {
-                    html += `<p class="text-sm">${photo.lens_model}</p>`;
-                }
-                html += '</div>';
-            }
-            
-            // 拍摄参数
-            if (photo.focal_length || photo.aperture || photo.shutter_speed || photo.iso) {
-                html += '<div style="text-align: right;">';
-                html += '<p class="text-xs text-gray-300 mb-1">⚙️ 参数</p>';
-                const params = [];
-                if (photo.focal_length) params.push(photo.focal_length);
-                if (photo.aperture) params.push(photo.aperture);
-                if (photo.shutter_speed) params.push(photo.shutter_speed);
-                if (photo.iso) params.push(`ISO ${photo.iso}`);
-                html += `<p class="text-sm">${params.join(' · ')}</p>`;
-                html += '</div>';
-            }
-            
-            // 文件信息
-            if (photo.width && photo.height) {
-                html += '<div style="text-align: right;">';
-                html += '<p class="text-xs text-gray-300 mb-1">📐 尺寸</p>';
-                html += `<p class="text-sm">${photo.width} × ${photo.height}</p>`;
-                html += '</div>';
-            }
-            
-            html += '</div>';
-            html += '</div>';
+            let h = '<div style="max-width:900px;margin:0 auto;text-align:center;">';
+            h += `<h4 style="font-size:1.25rem;font-weight:700;margin-bottom:8px;">${photo.title || photo.original_name}</h4>`;
+            if (photo.description) h += `<p style="margin-bottom:12px;opacity:0.9;">${photo.description}</p>`;
 
-            return html;
+            h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:12px;">';
+            if (photo.is_live_photo) h += '<span class="exif-tag" style="background:rgba(244,63,94,0.3);">● LIVE</span>';
+            if (photo.location) h += `<span class="exif-tag">📍 ${photo.location}</span>`;
+            if (photo.category) h += `<span class="exif-tag">📁 ${photo.category}</span>`;
+            if (photo.date_taken) h += `<span class="exif-tag">🕐 ${new Date(photo.date_taken).toLocaleDateString('zh-CN')}</span>`;
+            h += '</div>';
+
+            const hasDevice = photo.camera_make || photo.camera_model || photo.lens_model || photo.software;
+            const hasParams = photo.focal_length || photo.aperture || photo.shutter_speed || photo.iso;
+            const hasExtra = photo.white_balance || photo.flash || photo.exposure_mode || photo.metering_mode || photo.exposure_bias;
+
+            if (hasDevice || hasParams || hasExtra) {
+                h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-top:8px;font-size:13px;">';
+                if (hasDevice) {
+                    h += '<div style="text-align:center;"><p style="opacity:0.5;font-size:11px;margin-bottom:4px;">📸 设备</p>';
+                    if (photo.camera_make || photo.camera_model) h += `<p>${[photo.camera_make, photo.camera_model].filter(Boolean).join(' ')}</p>`;
+                    if (photo.lens_model) h += `<p style="opacity:0.8;">${photo.lens_model}</p>`;
+                    if (photo.software) h += `<p style="opacity:0.6;font-size:11px;">${photo.software}</p>`;
+                    h += '</div>';
+                }
+                if (hasParams) {
+                    h += '<div style="text-align:center;"><p style="opacity:0.5;font-size:11px;margin-bottom:4px;">⚙️ 参数</p>';
+                    h += `<p>${[photo.focal_length, photo.aperture, photo.shutter_speed, photo.iso ? 'ISO '+photo.iso : ''].filter(Boolean).join(' · ')}</p>`;
+                    if (photo.exposure_bias) h += `<p style="opacity:0.8;">${photo.exposure_bias}</p>`;
+                    h += '</div>';
+                }
+                if (hasExtra) {
+                    h += '<div style="text-align:center;"><p style="opacity:0.5;font-size:11px;margin-bottom:4px;">🔧 详情</p>';
+                    const extras = [photo.exposure_mode, photo.metering_mode, photo.white_balance, photo.flash, photo.color_space].filter(Boolean);
+                    h += `<p>${extras.join(' · ')}</p>`;
+                    h += '</div>';
+                }
+                if (photo.width && photo.height) {
+                    h += `<div style="text-align:center;"><p style="opacity:0.5;font-size:11px;margin-bottom:4px;">📐 尺寸</p><p>${photo.width} × ${photo.height}</p></div>`;
+                }
+                h += '</div>';
+            }
+            h += '</div>';
+            return h;
         }
 
-        // 加载更多
-        function loadMore() {
-            currentPage++;
-            loadPhotos(currentPage);
-        }
+        function loadMore() { currentPage++; loadPhotos(currentPage); }
 
-        // 图片懒加载（使用 Intersection Observer）
-        let lazyLoadObserver;
+        let lazyObs;
         function initLazyLoad() {
-            if (!lazyLoadObserver) {
-                lazyLoadObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            if (img.dataset.src) {
-                                img.src = img.dataset.src;
-                                img.classList.remove('lazy-image');
-                                img.classList.add('lazy-loaded');
-                                lazyLoadObserver.unobserve(img);
-                            }
-                        }
-                    });
-                }, {
-                    rootMargin: '50px' // 提前 50px 开始加载
+            if (!lazyObs) lazyObs = new IntersectionObserver(entries => {
+                entries.forEach(e => {
+                    if (e.isIntersecting && e.target.dataset.src) {
+                        e.target.src = e.target.dataset.src;
+                        e.target.classList.remove('lazy-image');
+                        e.target.classList.add('lazy-loaded');
+                        lazyObs.unobserve(e.target);
+                    }
                 });
-            }
-            
-            // 观察所有懒加载图片
-            document.querySelectorAll('.lazy-image').forEach(img => {
-                lazyLoadObserver.observe(img);
-            });
+            }, { rootMargin: '100px' });
+            document.querySelectorAll('.lazy-image').forEach(i => lazyObs.observe(i));
         }
 
-        // 无限滚动（自动加载更多）
-        let scrollThrottle;
+        let scrollT;
         function initInfiniteScroll() {
             window.addEventListener('scroll', () => {
-                // 节流：100ms 内只触发一次
-                if (scrollThrottle) return;
-                scrollThrottle = setTimeout(() => {
-                    scrollThrottle = null;
-                    
-                    // 距离底部 500px 时自动加载
-                    const scrollPosition = window.innerHeight + window.scrollY;
-                    const threshold = document.body.offsetHeight - 500;
-                    
-                    if (scrollPosition >= threshold && !isLoading) {
-                        const loadMoreBtn = document.getElementById('load-more');
-                        if (!loadMoreBtn.classList.contains('hidden')) {
-                            console.log('🔄 自动加载更多照片...');
-                            loadMore();
-                        }
+                if (scrollT) return;
+                scrollT = setTimeout(() => {
+                    scrollT = null;
+                    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && !isLoading) {
+                        const btn = document.getElementById('load-more');
+                        if (!btn.classList.contains('hidden')) loadMore();
                     }
                 }, 100);
             });
         }
 
-        
-        // 黑夜模式切换
-        function initThemeToggle() {
-            const themeToggle = document.getElementById('theme-toggle');
-            const body = document.body;
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-mode');
-                themeToggle.querySelector('span').textContent = '☀️';
-            }
-            
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-mode');
-                const isDark = body.classList.contains('dark-mode');
-                themeToggle.querySelector('span').textContent = isDark ? '☀️' : '🌙';
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            });
-        }
-
-        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
-            initThemeToggle();
-            loadCategories(); // 加载分类
-            loadPhotos(1);
-            initInfiniteScroll(); // 初始化无限滚动
-            
-            console.log('✨ 性能优化已启用:');
-            console.log('  ✓ 图片懒加载 (Intersection Observer)');
-            console.log('  ✓ 搜索防抖 (300ms)');
-            console.log('  ✓ 无限滚动 (自动加载)');
-            console.log('  ✓ DOM 批量渲染 (DocumentFragment)');
-            console.log('  ✓ 延迟初始化 (requestIdleCallback)');
+            initThemeToggle(); loadCategories(); loadPhotos(1); initInfiniteScroll();
         });
     </script>
 </body>
 </html>
-

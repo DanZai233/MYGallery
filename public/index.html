@@ -32,8 +32,16 @@
         .viewer-bg{position:absolute;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
         .viewer-container{position:relative;z-index:1;display:flex;width:100%;height:100%}
         .viewer-main{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-width:0}
-        .viewer-img-wrap{max-width:100%;max-height:100%;padding:48px 60px;display:flex;align-items:center;justify-content:center}
-        .viewer-img-wrap img{max-width:100%;max-height:calc(100vh - 96px);object-fit:contain;border-radius:4px;user-select:none}
+        .viewer-img-wrap{max-width:100%;max-height:100%;padding:48px 60px 100px;display:flex;align-items:center;justify-content:center}
+        .viewer-img-wrap img{max-width:100%;max-height:calc(100vh - 150px);object-fit:contain;border-radius:4px;user-select:none}
+
+        /* Thumbnail strip */
+        .thumb-strip{position:absolute;bottom:0;left:0;right:0;height:80px;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 60px;overflow-x:auto;z-index:6;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .thumb-strip::-webkit-scrollbar{display:none}
+        .thumb-item{flex-shrink:0;width:56px;height:56px;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;opacity:.5;transition:all .25s ease;position:relative}
+        .thumb-item:hover{opacity:.8;transform:scale(1.05)}
+        .thumb-item.active{opacity:1;border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.4);transform:scale(1.1)}
+        .thumb-item img{width:100%;height:100%;object-fit:cover;display:block}
         .viewer-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:20px;transition:all .2s;z-index:5} .viewer-nav:hover{background:rgba(255,255,255,.25)}
         .viewer-prev{left:16px} .viewer-next{right:16px}
         .viewer-close{position:absolute;top:16px;left:16px;z-index:10;width:40px;height:40px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:18px;transition:all .2s} .viewer-close:hover{background:rgba(255,255,255,.25)}
@@ -53,8 +61,10 @@
         #info-minimap{height:160px;border-radius:10px;overflow:hidden;margin:0 20px 16px}
         @media(max-width:768px){
             .info-panel{position:fixed;bottom:0;left:0;right:0;width:100%;max-height:70vh;border-left:none;border-top:1px solid rgba(255,255,255,.1);border-radius:16px 16px 0 0;transform:translateY(100%)}.info-panel.open{transform:translateY(0)}
-            .viewer-img-wrap{padding:16px}
-            .viewer-img-wrap img{max-height:calc(100vh - 64px)}
+            .viewer-img-wrap{padding:16px 16px 88px}
+            .viewer-img-wrap img{max-height:calc(100vh - 140px)}
+            .thumb-strip{padding:10px 16px;height:72px}
+            .thumb-item{width:48px;height:48px;border-radius:6px}
             .viewer-prev{left:8px;width:36px;height:36px} .viewer-next{right:8px;width:36px;height:36px}
         }
         footer{color:var(--text2)}
@@ -114,6 +124,7 @@
                 <div class="viewer-nav viewer-prev" onclick="viewerPrev()">‹</div>
                 <div class="viewer-nav viewer-next" onclick="viewerNext()">›</div>
                 <div class="viewer-img-wrap"><img id="viewer-img" src="" alt="" draggable="false"></div>
+                <div class="thumb-strip" id="thumb-strip"></div>
             </div>
             <div class="info-panel" id="info-panel">
                 <div class="info-section" style="border-bottom:1px solid rgba(255,255,255,.1)">
@@ -163,12 +174,16 @@
     let scrollT;window.addEventListener('scroll',()=>{if(scrollT)return;scrollT=setTimeout(()=>{scrollT=null;if(window.innerHeight+window.scrollY>=document.body.offsetHeight-500&&!loading){const b=document.getElementById('load-more');if(!b.classList.contains('hidden'))loadMore()}},100)});
 
     // === Custom Viewer ===
-    function openViewer(id){viewerPhotos=allPhotos;viewerIdx=allPhotos.findIndex(p=>p.id===id);if(viewerIdx<0)viewerIdx=0;showViewerPhoto();document.getElementById('viewer').classList.add('open');document.body.style.overflow='hidden';infoPanelOpen=window.innerWidth>=768;if(infoPanelOpen){document.getElementById('info-panel').classList.add('open');document.getElementById('viewer-info-btn').classList.add('active')}}
+    function openViewer(id){viewerPhotos=allPhotos;viewerIdx=allPhotos.findIndex(p=>p.id===id);if(viewerIdx<0)viewerIdx=0;buildThumbStrip();showViewerPhoto();document.getElementById('viewer').classList.add('open');document.body.style.overflow='hidden';infoPanelOpen=window.innerWidth>=768;if(infoPanelOpen){document.getElementById('info-panel').classList.add('open');document.getElementById('viewer-info-btn').classList.add('active')}}
     function closeViewer(){document.getElementById('viewer').classList.remove('open');document.body.style.overflow='';document.getElementById('info-panel').classList.remove('open');document.getElementById('viewer-info-btn').classList.remove('active');infoPanelOpen=false;if(miniMap){miniMap.remove();miniMap=null}}
     function viewerPrev(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx-1+viewerPhotos.length)%viewerPhotos.length;showViewerPhoto()}
     function viewerNext(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx+1)%viewerPhotos.length;showViewerPhoto()}
     function toggleInfoPanel(){infoPanelOpen=!infoPanelOpen;document.getElementById('info-panel').classList.toggle('open',infoPanelOpen);document.getElementById('viewer-info-btn').classList.toggle('active',infoPanelOpen)}
     document.addEventListener('keydown',e=>{if(!document.getElementById('viewer').classList.contains('open'))return;if(e.key==='Escape')closeViewer();if(e.key==='ArrowLeft')viewerPrev();if(e.key==='ArrowRight')viewerNext();if(e.key==='i'||e.key==='I')toggleInfoPanel()});
+
+    function buildThumbStrip(){const strip=document.getElementById('thumb-strip');strip.innerHTML=viewerPhotos.map((p,i)=>{const t=p.thumbnail_url||(p.url?.startsWith('http')?p.url:`/uploads/${p.filename}`);return`<div class="thumb-item${i===viewerIdx?' active':''}" onclick="jumpToPhoto(${i})" title="${p.title||p.original_name}"><img src="${t}" alt="" onerror="this.src='${p.url||''}'"></div>`}).join('')}
+
+    function jumpToPhoto(idx){viewerIdx=idx;showViewerPhoto()}
 
     function showViewerPhoto(){const p=viewerPhotos[viewerIdx];if(!p)return;
     const img=document.getElementById('viewer-img');img.src=p.url?.startsWith('http')?p.url:`/uploads/${p.filename}`;img.alt=p.title||p.original_name;
@@ -176,6 +191,9 @@
     document.getElementById('info-title').textContent=p.title||p.original_name;
     document.getElementById('info-desc').textContent=p.description||'';
     document.getElementById('info-desc').style.display=p.description?'':'none';
+    // Update thumbnail active state
+    document.querySelectorAll('.thumb-item').forEach((t,i)=>{t.classList.toggle('active',i===viewerIdx)});
+    const activeThumb=document.querySelector('.thumb-item.active');if(activeThumb)activeThumb.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
     buildInfoSections(p);buildMiniMap(p)}
 
     function buildInfoSections(p){

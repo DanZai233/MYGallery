@@ -33,6 +33,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	authHandler := handlers.NewAuthHandler(cfg)
 	photoHandler := handlers.NewPhotoHandler(cfg)
 	settingsHandler := handlers.NewSettingsHandler(cfg)
+	reactionHandler := handlers.NewReactionHandler()
 	
 	// API 路由组
 	api := r.Group("/api")
@@ -53,6 +54,11 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		// 设置相关（公开接口）
 		api.GET("/settings", settingsHandler.GetSettings)
 		api.GET("/categories", settingsHandler.GetCategories)
+
+		// 表态相关（公开接口，通过指纹识别用户）
+		api.GET("/photos/:id/reactions", reactionHandler.GetReactions)
+		api.POST("/photos/:id/reactions", reactionHandler.AddReaction)
+		api.DELETE("/photos/:id/reactions", reactionHandler.DeleteReaction)
 		
 		// 需要认证的接口
 		authRequired := api.Group("")

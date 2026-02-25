@@ -83,6 +83,31 @@ type Photo struct {
 	Views     int    `gorm:"default:0" json:"views"`
 }
 
+// PhotoReaction 照片表态模型
+type PhotoReaction struct {
+	ID           uint      `gorm:"primarykey" json:"id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	PhotoID      uint      `gorm:"not null;index" json:"photo_id"`
+	ReactionType string    `gorm:"not null" json:"reaction_type"`
+	Fingerprint  string    `gorm:"not null;index" json:"-"`
+	IPAddress    string    `json:"-"`
+	UserAgent    string    `json:"-"`
+}
+
+// ReactionCount 表态统计
+type ReactionCount struct {
+	ReactionType string `json:"reaction_type"`
+	Count        int64  `json:"count"`
+}
+
+// ReactionResponse 表态响应
+type ReactionResponse struct {
+	PhotoID      uint              `json:"photo_id"`
+	Reactions    map[string]int64  `json:"reactions"`
+	UserReaction string            `json:"user_reaction"`
+}
+
 // LoginRequest 登录请求
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`

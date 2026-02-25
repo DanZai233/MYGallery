@@ -81,6 +81,19 @@
         .info-label{color:rgba(255,255,255,.45);display:flex;align-items:center;gap:5px;flex-shrink:0} .info-value{color:#fff;text-align:right;word-break:break-word;max-width:58%}
         .info-tag{display:inline-block;padding:2px 8px;background:rgba(255,255,255,.07);border-radius:5px;font-size:11px;margin:2px;color:rgba(255,255,255,.75)}
         #info-minimap{height:140px;border-radius:8px;overflow:hidden;margin:0 16px 12px}
+        /* Reaction picker */
+        .reaction-picker{position:absolute;top:52px;right:80px;z-index:30;background:rgba(23,23,23,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px;box-shadow:0 16px 48px rgba(0,0,0,.4);animation:rpIn .2s ease}
+        @keyframes rpIn{from{opacity:0;transform:scale(.92) translateY(-8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+        .reaction-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;min-width:200px}
+        .reaction-item{position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;cursor:pointer;transition:all .15s;background:transparent;border:none;padding:4px;-webkit-tap-highlight-color:transparent}
+        .reaction-item:hover{background:rgba(255,255,255,.08);transform:scale(1.12)}
+        .reaction-item:active{transform:scale(.92)}
+        .reaction-item.selected{background:rgba(59,130,246,.2);box-shadow:inset 0 0 0 2px rgba(59,130,246,.5)}
+        .reaction-item .emoji{font-size:26px;line-height:1;pointer-events:none}
+        .reaction-item .rcount{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;background:rgba(255,255,255,.12);border-radius:8px;font-size:9px;font-weight:700;color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}
+        .reaction-item.selected .rcount{background:rgba(59,130,246,.6);color:#fff}
+        .viewer-react.has-reaction{background:rgba(59,130,246,.3);border-color:rgba(59,130,246,.5)}
+        @media(max-width:768px){.reaction-picker{right:40px;top:48px;padding:10px}.reaction-item .emoji{font-size:22px}.viewer-react{top:12px;right:88px}}
         .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(34,197,94,.9);color:#fff;padding:8px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:200;pointer-events:none;backdrop-filter:blur(8px)} .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
         @media(max-width:768px){
             .info-panel{position:fixed;bottom:0;left:0;right:0;width:100%!important;max-height:70vh;border-left:none!important;border-top:1px solid transparent;border-radius:14px 14px 0 0;overflow:hidden;height:0;transition:height .35s cubic-bezier(.4,0,.2,1),border-color .35s}.info-panel.open{height:70vh;overflow-y:auto;border-top-color:rgba(255,255,255,.1)}
@@ -131,6 +144,11 @@
             <div class="viewer-main">
                 <div class="vbtn viewer-close" onclick="closeViewer()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></div>
                 <div class="vbtn viewer-share" id="viewer-share" onclick="sharePhoto()" title="分享"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v2a1 1 0 001 1h6a1 1 0 001-1v-2M8 2v9M5 5l3-3 3 3"/></svg></div>
+                <div class="vbtn viewer-react" id="viewer-react" onclick="toggleReactionPicker()" title="表态" style="top:12px;right:100px"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="7"/><path d="M5.5 6.5v.01M10.5 6.5v.01M5.5 10c.83.83 4.17.83 5 0"/></svg></div>
+                <!-- Reaction picker popup -->
+                <div class="reaction-picker" id="reaction-picker" style="display:none">
+                    <div class="reaction-grid" id="reaction-grid"></div>
+                </div>
                 <div class="vbtn viewer-info-btn" id="viewer-info-btn" onclick="toggleInfoPanel()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5.5v0"/></svg></div>
                 <div class="viewer-nav viewer-prev" onclick="viewerPrev()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l-5 5 5 5"/></svg></div>
                 <div class="viewer-nav viewer-next" onclick="viewerNext()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"/></svg></div>
@@ -188,7 +206,7 @@
     // === Viewer ===
     function openViewer(id){viewerPhotos=allPhotos;viewerIdx=allPhotos.findIndex(p=>p.id===id);if(viewerIdx<0)viewerIdx=0;buildThumbStrip();showViewerPhoto();document.getElementById('viewer').classList.add('open');document.body.style.overflow='hidden';infoPanelOpen=window.innerWidth>=768;if(infoPanelOpen){document.getElementById('info-panel').classList.add('open');document.getElementById('viewer-info-btn').classList.add('active')}
     updateURL(viewerPhotos[viewerIdx]?.id)}
-    function closeViewer(){document.getElementById('viewer').classList.remove('open');document.body.style.overflow='';document.getElementById('info-panel').classList.remove('open');document.getElementById('viewer-info-btn').classList.remove('active');infoPanelOpen=false;if(miniMap){miniMap.remove();miniMap=null}
+    function closeViewer(){closeReactionPicker();document.getElementById('viewer').classList.remove('open');document.body.style.overflow='';document.getElementById('info-panel').classList.remove('open');document.getElementById('viewer-info-btn').classList.remove('active');infoPanelOpen=false;if(miniMap){miniMap.remove();miniMap=null}
     history.replaceState(null,'',window.location.pathname)}
     function viewerPrev(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx-1+viewerPhotos.length)%viewerPhotos.length;showViewerPhoto();updateURL(viewerPhotos[viewerIdx]?.id)}
     function viewerNext(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx+1)%viewerPhotos.length;showViewerPhoto();updateURL(viewerPhotos[viewerIdx]?.id)}
@@ -203,7 +221,7 @@
     function buildThumbStrip(){const strip=document.getElementById('thumb-strip');strip.innerHTML=viewerPhotos.map((p,i)=>{const t=p.thumbnail_url||(p.url?.startsWith('http')?p.url:`/uploads/${p.filename}`);return`<div class="thumb-item${i===viewerIdx?' active':''}" onclick="jumpToPhoto(${i})"><img src="${t}" alt="" onerror="this.src='${p.url||''}'"></div>`}).join('')}
     function jumpToPhoto(idx){viewerIdx=idx;showViewerPhoto();updateURL(viewerPhotos[viewerIdx]?.id)}
 
-    function showViewerPhoto(){const p=viewerPhotos[viewerIdx];if(!p)return;
+    function showViewerPhoto(){const p=viewerPhotos[viewerIdx];if(!p)return;closeReactionPicker();currentReactionData={reactions:{},userReaction:null};updateReactBtn();loadReactionsQuiet();
     const img=document.getElementById('viewer-img');img.src=p.url?.startsWith('http')?p.url:`/uploads/${p.filename}`;img.alt=p.title||p.original_name;
     document.getElementById('info-title').textContent=p.title||p.original_name;
     document.getElementById('info-desc').textContent=p.description||'';
@@ -224,6 +242,33 @@
     function fmtBytes(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB'}
     function fmtGPS(la,ln){return`${Math.abs(la).toFixed(4)}°${la>=0?'N':'S'}, ${Math.abs(ln).toFixed(4)}°${ln>=0?'E':'W'}`}
     function buildMiniMap(p){const el=document.getElementById('info-minimap');if(miniMap){miniMap.remove();miniMap=null}if(p.gps_latitude&&p.gps_longitude){el.style.display='';setTimeout(()=>{miniMap=L.map(el,{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false}).setView([p.gps_latitude,p.gps_longitude],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);L.marker([p.gps_latitude,p.gps_longitude]).addTo(miniMap);miniMap.invalidateSize()},100)}else{el.style.display='none'}}
+
+    // === Reactions ===
+    const REACTIONS=[
+        {id:'like',emoji:'👍',label:'赞'},
+        {id:'love',emoji:'❤️',label:'喜欢'},
+        {id:'amazing',emoji:'😍',label:'惊艳'},
+        {id:'funny',emoji:'😂',label:'有趣'},
+        {id:'wow',emoji:'😮',label:'震撼'},
+        {id:'sad',emoji:'😢',label:'感伤'},
+        {id:'fire',emoji:'🔥',label:'火'},
+        {id:'sparkle',emoji:'✨',label:'闪耀'}
+    ];
+    let reactionPickerOpen=false,currentReactionData={reactions:{},userReaction:null};
+
+    function toggleReactionPicker(){reactionPickerOpen=!reactionPickerOpen;document.getElementById('reaction-picker').style.display=reactionPickerOpen?'block':'none';if(reactionPickerOpen)loadReactions()}
+    function closeReactionPicker(){reactionPickerOpen=false;document.getElementById('reaction-picker').style.display='none'}
+
+    async function loadReactions(){const p=viewerPhotos[viewerIdx];if(!p)return;try{const r=await fetch(`${API}/photos/${p.id}/reactions`);const d=await r.json();currentReactionData=d;renderReactionGrid();updateReactBtn()}catch(e){}}
+    async function loadReactionsQuiet(){const p=viewerPhotos[viewerIdx];if(!p)return;try{const r=await fetch(`${API}/photos/${p.id}/reactions`);const d=await r.json();currentReactionData=d;updateReactBtn()}catch(e){}}
+
+    function renderReactionGrid(){const grid=document.getElementById('reaction-grid');grid.innerHTML=REACTIONS.map(r=>{const count=currentReactionData.reactions?.[r.id]||0;const selected=currentReactionData.userReaction===r.id;return`<button class="reaction-item${selected?' selected':''}" onclick="react('${r.id}')" title="${r.label}"><span class="emoji">${r.emoji}</span>${count>0?`<span class="rcount">${count}</span>`:''}</button>`}).join('')}
+
+    async function react(type){const p=viewerPhotos[viewerIdx];if(!p)return;
+    if(currentReactionData.userReaction===type){try{await fetch(`${API}/photos/${p.id}/reactions`,{method:'DELETE'});currentReactionData.userReaction=null;currentReactionData.reactions[type]=Math.max(0,(currentReactionData.reactions[type]||1)-1);renderReactionGrid();updateReactBtn()}catch(e){}}
+    else{try{await fetch(`${API}/photos/${p.id}/reactions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reaction_type:type})});if(currentReactionData.userReaction){const old=currentReactionData.userReaction;currentReactionData.reactions[old]=Math.max(0,(currentReactionData.reactions[old]||1)-1)}currentReactionData.userReaction=type;currentReactionData.reactions[type]=(currentReactionData.reactions[type]||0)+1;renderReactionGrid();updateReactBtn()}catch(e){}}}
+
+    function updateReactBtn(){const btn=document.getElementById('viewer-react');btn.classList.toggle('has-reaction',!!currentReactionData.userReaction)}
 
     // Touch swipe
     let touchStartX=0;document.getElementById('viewer')?.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX},{passive:true});

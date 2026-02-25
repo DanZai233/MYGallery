@@ -128,8 +128,10 @@ func ExtractEXIF(filePath string) (*EXIFData, error) {
 	exifData.DateTaken = parseExifDate(x)
 
 	if lat, long, err := x.LatLong(); err == nil {
-		exifData.GPSLatitude = lat
-		exifData.GPSLongitude = long
+		if lat != 0 || long != 0 {
+			exifData.GPSLatitude = lat
+			exifData.GPSLongitude = long
+		}
 	}
 
 	if orient, err := x.Get(exif.Orientation); err == nil {

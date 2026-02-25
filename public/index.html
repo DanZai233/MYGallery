@@ -8,137 +8,149 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
-        :root { --bg:#f0f4f8;--bg2:#fff;--text:#1f2937;--text2:#6b7280;--glass:rgba(255,255,255,0.7);--glass-b:rgba(255,255,255,0.3);--accent:#3b82f6;--accent-l:rgba(59,130,246,0.1); }
-        .dark-mode { --bg:#0f172a;--bg2:#1e293b;--text:#f1f5f9;--text2:#94a3b8;--glass:rgba(30,41,59,0.8);--glass-b:rgba(255,255,255,0.08);--accent:#60a5fa;--accent-l:rgba(96,165,250,0.15); }
-        *{box-sizing:border-box} body{background:var(--bg);color:var(--text);transition:background .4s,color .3s;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;margin:0}
-        .dark-mode .text-gray-800,.dark-mode h1,.dark-mode h2,.dark-mode h3,.dark-mode p{color:var(--text)!important} .dark-mode .text-gray-600,.dark-mode .text-gray-700,.dark-mode .text-gray-500{color:var(--text2)!important}
-        .glass-nav{background:var(--glass);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--glass-b)}
-        .photo-card{break-inside:avoid;margin-bottom:16px;position:relative}
-        .card-inner{position:relative;overflow:hidden;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);transition:transform .3s cubic-bezier(.4,0,.2,1),box-shadow .3s;background:var(--bg2);cursor:pointer}
-        .card-inner:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.15)}
-        .photo-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,.75),rgba(0,0,0,.3) 60%,transparent);padding:40px 16px 16px;color:#fff;opacity:0;transition:opacity .3s} .card-inner:hover .photo-overlay,.touch-active .photo-overlay{opacity:1}
-        .card-inner img{transition:transform .5s cubic-bezier(.4,0,.2,1);display:block} .card-inner:hover img{transform:scale(1.05)}
-        .masonry{column-count:4;column-gap:16px;padding:0 4px} @media(max-width:1200px){.masonry{column-count:3}} @media(max-width:768px){.masonry{column-count:2;column-gap:10px}}
-        .lazy-img{opacity:0;transition:opacity .5s} .lazy-loaded{opacity:1}
-        .cat-btn{background:var(--accent-l);border:1.5px solid transparent;color:var(--text);font-weight:500;font-size:14px;padding:8px 20px;border-radius:999px;transition:all .25s;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
-        .cat-btn:hover{background:var(--accent);color:#fff} .cat-btn.active{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.4)}
-        .live-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;z-index:5}
-        .scroll-top{position:fixed;bottom:24px;right:24px;width:48px;height:48px;background:var(--accent);color:#fff;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;box-shadow:0 4px 20px rgba(59,130,246,.4);opacity:0;transform:translateY(20px);transition:all .3s;z-index:40} .scroll-top.visible{opacity:1;transform:translateY(0)}
-        .mobile-menu-btn{display:none;padding:8px;cursor:pointer} @media(max-width:768px){.mobile-menu-btn{display:flex;align-items:center}.desktop-nav{display:none!important}.mobile-nav{position:fixed;top:64px;left:0;right:0;background:var(--glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-b);padding:16px 24px;z-index:45;transform:translateY(-100%);opacity:0;transition:all .3s}.mobile-nav.open{transform:translateY(0);opacity:1}.hero-title{font-size:1.75rem!important}.photo-card{margin-bottom:10px}.card-inner{border-radius:12px}}
+        :root{--bg:#f5f5f7;--bg2:#fff;--text:#1d1d1f;--text2:#86868b;--glass:rgba(255,255,255,.72);--glass-b:rgba(0,0,0,.06);--accent:#0071e3;--accent-l:rgba(0,113,227,.08)}
+        .dark-mode{--bg:#0a0a0a;--bg2:#1c1c1e;--text:#f5f5f7;--text2:#86868b;--glass:rgba(28,28,30,.82);--glass-b:rgba(255,255,255,.06);--accent:#2997ff;--accent-l:rgba(41,151,255,.12)}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;transition:background .4s,color .3s}
+        .dark-mode .t-dark{color:var(--text)!important} .dark-mode .t2-dark{color:var(--text2)!important}
 
-        /* === Custom Viewer (ChronoFrame-style) === */
-        .viewer-overlay{position:fixed;inset:0;z-index:100;display:none;opacity:0;transition:opacity .3s}
-        .viewer-overlay.open{display:flex;opacity:1}
-        .viewer-bg{position:absolute;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
+        /* Side nav */
+        .side-nav{position:fixed;left:0;top:0;bottom:0;width:56px;z-index:50;display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px;background:var(--glass);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-right:1px solid var(--glass-b)}
+        .nav-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text2);text-decoration:none;font-size:18px;transition:all .2s;cursor:pointer;border:none;background:none;-webkit-tap-highlight-color:transparent}
+        .nav-icon:hover{background:var(--accent-l);color:var(--accent)} .nav-icon.active{background:var(--accent);color:#fff}
+        .nav-spacer{flex:1}
+        @media(max-width:768px){.side-nav{left:0;right:0;top:auto;bottom:0;width:100%;height:52px;flex-direction:row;justify-content:center;padding:0 8px;gap:2px;border-right:none;border-top:1px solid var(--glass-b)}.nav-icon{width:44px;height:44px}.nav-spacer{display:none}}
+
+        /* Main content */
+        .main-content{margin-left:56px;min-height:100vh} @media(max-width:768px){.main-content{margin-left:0;margin-bottom:52px}}
+
+        /* Header bar */
+        .header-bar{padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:30;background:var(--glass);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--glass-b)}
+        .header-bar h1{font-size:16px;font-weight:700;white-space:nowrap}
+        .header-bar .count{font-size:12px;color:var(--text2);white-space:nowrap}
+
+        /* Category & search */
+        .filter-bar{padding:8px 20px;display:flex;align-items:center;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-bottom:1px solid var(--glass-b);background:var(--bg)}
+        .filter-bar::-webkit-scrollbar{display:none}
+        .cat-btn{background:var(--accent-l);border:none;color:var(--text);font-weight:500;font-size:12px;padding:6px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:all .2s;-webkit-tap-highlight-color:transparent}
+        .cat-btn:hover{background:var(--accent);color:#fff} .cat-btn.active{background:var(--accent);color:#fff}
+        .search-input{flex:1;min-width:120px;max-width:240px;padding:6px 12px;border-radius:8px;border:1px solid var(--glass-b);background:var(--bg2);color:var(--text);font-size:12px;outline:none;transition:border-color .2s}
+        .search-input:focus{border-color:var(--accent)}
+
+        /* Masonry grid - denser */
+        .masonry{column-count:5;column-gap:4px;padding:4px}
+        @media(max-width:1400px){.masonry{column-count:4}}
+        @media(max-width:1000px){.masonry{column-count:3}}
+        @media(max-width:600px){.masonry{column-count:2;column-gap:3px;padding:3px}}
+        .photo-card{break-inside:avoid;margin-bottom:4px;position:relative}
+        @media(max-width:600px){.photo-card{margin-bottom:3px}}
+        .card-inner{position:relative;overflow:hidden;cursor:pointer;background:var(--bg2)}
+        .card-inner img{display:block;width:100%;height:auto;transition:transform .4s cubic-bezier(.4,0,.2,1)} .card-inner:hover img{transform:scale(1.04)}
+        .photo-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,.7),transparent);padding:28px 10px 10px;color:#fff;opacity:0;transition:opacity .3s} .card-inner:hover .photo-overlay,.touch-active .photo-overlay{opacity:1}
+        .photo-overlay h3{font-size:13px;font-weight:600;line-height:1.3} .photo-overlay p{font-size:10px;opacity:.8;margin-top:2px}
+        .live-badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;z-index:2}
+        .lazy-img{opacity:0;transition:opacity .5s} .lazy-loaded{opacity:1}
+        .scroll-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;background:var(--accent);color:#fff;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.15);opacity:0;transform:translateY(16px);transition:all .3s;z-index:40} .scroll-top.visible{opacity:1;transform:translateY(0)}
+        @media(max-width:768px){.scroll-top{bottom:68px}}
+
+        /* Viewer */
+        .viewer-overlay{position:fixed;inset:0;z-index:100;display:none;opacity:0;transition:opacity .3s} .viewer-overlay.open{display:flex;opacity:1}
+        .viewer-bg{position:absolute;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px)}
         .viewer-container{position:relative;z-index:1;display:flex;width:100%;height:100%}
         .viewer-main{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-width:0}
-        .viewer-img-wrap{max-width:100%;max-height:100%;padding:48px 60px 100px;display:flex;align-items:center;justify-content:center}
-        .viewer-img-wrap img{max-width:100%;max-height:calc(100vh - 150px);object-fit:contain;border-radius:4px;user-select:none}
-
-        /* Thumbnail strip */
-        .thumb-strip{position:absolute;bottom:0;left:0;right:0;height:80px;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 60px;overflow-x:auto;z-index:6;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .viewer-img-wrap{max-width:100%;max-height:100%;padding:12px 56px 84px;display:flex;align-items:center;justify-content:center}
+        .viewer-img-wrap img{max-width:100%;max-height:calc(100vh - 100px);object-fit:contain;border-radius:2px;user-select:none}
+        .thumb-strip{position:absolute;bottom:0;left:0;right:0;height:72px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 56px;overflow-x:auto;z-index:6;background:linear-gradient(to top,rgba(0,0,0,.5),transparent);-webkit-overflow-scrolling:touch;scrollbar-width:none}
         .thumb-strip::-webkit-scrollbar{display:none}
-        .thumb-item{flex-shrink:0;width:56px;height:56px;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;opacity:.5;transition:all .25s ease;position:relative}
-        .thumb-item:hover{opacity:.8;transform:scale(1.05)}
-        .thumb-item.active{opacity:1;border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.4);transform:scale(1.1)}
+        .thumb-item{flex-shrink:0;width:52px;height:52px;border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;opacity:.45;transition:all .2s}
+        .thumb-item:hover{opacity:.75} .thumb-item.active{opacity:1;border-color:#fff;box-shadow:0 0 10px rgba(255,255,255,.35);transform:scale(1.08)}
         .thumb-item img{width:100%;height:100%;object-fit:cover;display:block}
-        .viewer-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:20px;transition:all .2s;z-index:5} .viewer-nav:hover{background:rgba(255,255,255,.25)}
-        .viewer-prev{left:16px} .viewer-next{right:16px}
-        .viewer-close{position:absolute;top:16px;left:16px;z-index:10;width:40px;height:40px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:18px;transition:all .2s} .viewer-close:hover{background:rgba(255,255,255,.25)}
-        .viewer-counter{position:absolute;top:16px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:14px;font-weight:500;z-index:5}
-        .viewer-info-btn{position:absolute;top:16px;right:16px;z-index:10;width:40px;height:40px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;transition:all .2s} .viewer-info-btn:hover{background:rgba(255,255,255,.25)} .viewer-info-btn.active{background:var(--accent);border-color:var(--accent)}
+        .vbtn{position:absolute;z-index:10;width:36px;height:36px;background:rgba(255,255,255,.08);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:all .2s;font-size:16px} .vbtn:hover{background:rgba(255,255,255,.2)}
+        .viewer-close{top:12px;left:12px;font-size:14px}
+        .viewer-share{top:12px;right:56px} .viewer-share.copied{background:rgba(34,197,94,.6);border-color:rgba(34,197,94,.8)}
+        .viewer-info-btn{top:12px;right:12px} .viewer-info-btn.active{background:var(--accent);border-color:var(--accent)}
+        .viewer-nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;background:rgba(255,255,255,.06);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:18px;transition:all .2s;z-index:5} .viewer-nav:hover{background:rgba(255,255,255,.18)}
+        .viewer-prev{left:12px} .viewer-next{right:12px}
 
-        /* Info Panel (ChronoFrame-style side panel) */
-        .info-panel{width:0;background:rgba(0,0,0,.3);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-left:1px solid transparent;color:#fff;overflow:hidden;transition:width .35s cubic-bezier(.4,0,.2,1),border-color .35s;flex-shrink:0}
-        .info-panel.open{width:340px;overflow-y:auto;border-left-color:rgba(255,255,255,.08)}
-        .info-panel::-webkit-scrollbar{width:4px} .info-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:2px}
-        .info-section{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
-        .info-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.4);margin-bottom:12px}
-        .info-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;font-size:13px}
-        .info-label{color:rgba(255,255,255,.5);display:flex;align-items:center;gap:6px;flex-shrink:0}
-        .info-value{color:#fff;text-align:right;word-break:break-word;max-width:60%}
-        .info-tag{display:inline-block;padding:3px 10px;background:rgba(255,255,255,.08);border-radius:6px;font-size:12px;margin:2px;color:rgba(255,255,255,.8)}
-        #info-minimap{height:160px;border-radius:10px;overflow:hidden;margin:0 20px 16px}
+        .info-panel{width:0;background:rgba(0,0,0,.25);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-left:1px solid transparent;color:#fff;overflow:hidden;transition:width .35s cubic-bezier(.4,0,.2,1),border-color .35s;flex-shrink:0}
+        .info-panel.open{width:320px;overflow-y:auto;border-left-color:rgba(255,255,255,.06)}
+        .info-panel::-webkit-scrollbar{width:3px} .info-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
+        .info-section{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.05)}
+        .info-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.35);margin-bottom:10px}
+        .info-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;font-size:12px}
+        .info-label{color:rgba(255,255,255,.45);display:flex;align-items:center;gap:5px;flex-shrink:0} .info-value{color:#fff;text-align:right;word-break:break-word;max-width:58%}
+        .info-tag{display:inline-block;padding:2px 8px;background:rgba(255,255,255,.07);border-radius:5px;font-size:11px;margin:2px;color:rgba(255,255,255,.75)}
+        #info-minimap{height:140px;border-radius:8px;overflow:hidden;margin:0 16px 12px}
+        .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(34,197,94,.9);color:#fff;padding:8px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:200;pointer-events:none;backdrop-filter:blur(8px)} .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
         @media(max-width:768px){
-            .info-panel{position:fixed;bottom:0;left:0;right:0;width:100%!important;max-height:70vh;border-left:none!important;border-top:1px solid transparent;border-radius:16px 16px 0 0;overflow:hidden;height:0;transition:height .35s cubic-bezier(.4,0,.2,1),border-color .35s}.info-panel.open{height:70vh;overflow-y:auto;border-top-color:rgba(255,255,255,.1)}
-            .viewer-img-wrap{padding:16px 16px 88px}
-            .viewer-img-wrap img{max-height:calc(100vh - 140px)}
-            .thumb-strip{padding:10px 16px;height:72px}
-            .thumb-item{width:48px;height:48px;border-radius:6px}
-            .viewer-prev{left:8px;width:36px;height:36px} .viewer-next{right:8px;width:36px;height:36px}
+            .info-panel{position:fixed;bottom:0;left:0;right:0;width:100%!important;max-height:70vh;border-left:none!important;border-top:1px solid transparent;border-radius:14px 14px 0 0;overflow:hidden;height:0;transition:height .35s cubic-bezier(.4,0,.2,1),border-color .35s}.info-panel.open{height:70vh;overflow-y:auto;border-top-color:rgba(255,255,255,.1)}
+            .viewer-img-wrap{padding:8px 8px 80px} .viewer-img-wrap img{max-height:calc(100vh - 120px)}
+            .thumb-strip{padding:8px 12px;height:64px} .thumb-item{width:44px;height:44px;border-radius:5px}
+            .viewer-prev{left:6px;width:32px;height:32px} .viewer-next{right:6px;width:32px;height:32px}
+            .viewer-share{right:50px} .viewer-info-btn{right:8px} .viewer-close{left:8px}
         }
-        footer{color:var(--text2)}
     </style>
 </head>
 <body>
-    <header class="glass-nav fixed top-0 left-0 right-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-            <div class="flex items-center justify-between">
-                <a href="/" class="flex items-center space-x-2 no-underline"><span class="text-2xl sm:text-3xl">📷</span><h1 class="text-xl sm:text-2xl font-bold text-gray-800">MYGallery</h1></a>
-                <nav class="desktop-nav flex items-center space-x-4">
-                    <a href="/map.html" class="text-gray-700 hover:text-blue-600 transition font-medium text-sm flex items-center gap-1">🗺️ 地图</a>
-                    <a href="/admin" class="text-gray-700 hover:text-blue-600 transition font-medium text-sm">管理</a>
-                    <button id="theme-toggle" class="p-2 rounded-xl hover:bg-gray-200/50 transition" title="切换主题"><span class="text-xl">🌙</span></button>
-                </nav>
-                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="菜单"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <!-- Side navigation (ChronoFrame-style) -->
+    <nav class="side-nav">
+        <a href="/" class="nav-icon active" title="首页" style="font-size:22px">📷</a>
+        <div class="nav-spacer"></div>
+        <a href="/map.html" class="nav-icon" title="地图">🗺️</a>
+        <a href="/admin" class="nav-icon" title="管理">⚙️</a>
+        <button class="nav-icon" id="theme-toggle" title="主题"><span>🌙</span></button>
+    </nav>
+
+    <div class="main-content">
+        <!-- Compact header + filters -->
+        <div class="header-bar">
+            <h1 class="t-dark">MYGallery</h1>
+            <span class="count" id="photo-count">0 张照片</span>
+            <div style="flex:1"></div>
+            <div id="category-filter" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+                <button onclick="filterByCategory('')" class="cat-btn active">全部</button>
             </div>
         </div>
-    </header>
-    <div id="mobile-nav" class="mobile-nav"><div class="flex flex-col space-y-3">
-        <a href="/map.html" class="text-gray-700 font-medium flex items-center gap-2">🗺️ 照片地图</a>
-        <a href="/admin" class="text-gray-700 font-medium flex items-center gap-2">⚙️ 后台管理</a>
-        <button onclick="toggleTheme()" class="text-left text-gray-700 font-medium flex items-center gap-2"><span id="mobile-theme-icon">🌙</span> 切换主题</button>
-    </div></div>
+        <div class="filter-bar" id="filter-bar" style="display:none">
+            <input type="text" id="search-input" class="search-input" placeholder="搜索标题、描述、标签、位置..." onkeyup="handleSearch(event)">
+            <button onclick="clearSearch()" class="cat-btn" style="font-size:11px">清除</button>
+        </div>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-12">
-        <div class="text-center mb-6 sm:mb-8">
-            <h2 class="hero-title text-3xl sm:text-4xl font-bold text-gray-800 mb-2">精选时刻 · 美好回忆</h2>
-            <p class="text-gray-600 text-sm sm:text-base" id="photo-count">共 0 张照片</p>
-        </div>
-        <div class="mb-6 sm:mb-8">
-            <div class="flex flex-nowrap items-center justify-start sm:justify-center gap-2 sm:gap-3 mb-4 overflow-x-auto pb-2 px-1" id="category-filter" style="-webkit-overflow-scrolling:touch;scrollbar-width:none"><button onclick="filterByCategory('')" class="cat-btn active">全部</button></div>
-            <div class="flex justify-center"><div class="relative w-full max-w-2xl">
-                <button id="search-toggle" onclick="toggleSearch()" class="cat-btn flex items-center gap-2">🔍 搜索照片</button>
-                <div id="search-bar" class="hidden mt-3 rounded-2xl p-4 shadow-lg" style="background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-b)">
-                    <div class="relative"><input type="text" id="search-input" placeholder="搜索标题、描述、标签、位置..." class="w-full px-4 py-3 pr-24 border-0 rounded-xl outline-none text-sm" style="background:var(--bg2);color:var(--text)" onkeyup="handleSearch(event)">
-                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-2"><button onclick="performSearch()" class="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">搜索</button><button onclick="clearSearch()" class="px-3 py-1.5 text-sm rounded-lg" style="background:var(--accent-l);color:var(--text)">清除</button></div></div>
-                </div>
-            </div></div>
-        </div>
-        <div id="loading" class="flex justify-center items-center py-20"><div class="animate-spin rounded-full h-12 w-12 border-[3px] border-blue-200 border-t-blue-600"></div></div>
-        <div id="photo-wall" class="masonry hidden"></div>
-        <div id="empty-state" class="hidden text-center py-20"><div class="text-6xl mb-4">📸</div><h3 class="text-2xl font-semibold text-gray-700 mb-2">还没有照片</h3><p class="text-gray-500">敬请期待更多精彩照片</p></div>
-        <div id="load-more" class="hidden text-center mt-8"><button onclick="loadMore()" class="px-8 py-3 rounded-xl font-medium" style="background:var(--bg2);box-shadow:0 2px 12px rgba(0,0,0,.08);color:var(--text)">加载更多</button></div>
-    </main>
-    <footer class="text-center py-8"><p class="text-sm">© <script>document.write(new Date().getFullYear())</script> MYGallery</p></footer>
+        <!-- Gallery -->
+        <div id="loading" style="display:flex;justify-content:center;padding:80px 0"><div class="animate-spin rounded-full" style="width:36px;height:36px;border:3px solid var(--glass-b);border-top-color:var(--accent);border-radius:50%"></div></div>
+        <div id="photo-wall" class="masonry" style="display:none"></div>
+        <div id="empty-state" style="display:none;text-align:center;padding:80px 20px"><div style="font-size:48px;margin-bottom:12px">📸</div><h3 style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">还没有照片</h3><p style="font-size:13px;color:var(--text2)">敬请期待更多精彩照片</p></div>
+        <div id="load-more" style="display:none;text-align:center;padding:20px"><button onclick="loadMore()" class="cat-btn" style="padding:8px 24px">加载更多</button></div>
+    </div>
     <button class="scroll-top" id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
-    <!-- Custom Photo Viewer (ChronoFrame-style) -->
+    <!-- Viewer -->
     <div class="viewer-overlay" id="viewer">
         <div class="viewer-bg" onclick="closeViewer()"></div>
         <div class="viewer-container">
             <div class="viewer-main">
-                <div class="viewer-close" onclick="closeViewer()">✕</div>
-                <div class="viewer-counter" id="viewer-counter">1 / 8</div>
-                <div class="viewer-info-btn" id="viewer-info-btn" onclick="toggleInfoPanel()">ℹ</div>
+                <div class="vbtn viewer-close" onclick="closeViewer()">✕</div>
+                <div class="vbtn viewer-share" id="viewer-share" onclick="sharePhoto()" title="分享">🔗</div>
+                <div class="vbtn viewer-info-btn" id="viewer-info-btn" onclick="toggleInfoPanel()">ℹ</div>
                 <div class="viewer-nav viewer-prev" onclick="viewerPrev()">‹</div>
                 <div class="viewer-nav viewer-next" onclick="viewerNext()">›</div>
                 <div class="viewer-img-wrap"><img id="viewer-img" src="" alt="" draggable="false"></div>
                 <div class="thumb-strip" id="thumb-strip"></div>
             </div>
             <div class="info-panel" id="info-panel">
-                <div class="info-section" style="border-bottom:1px solid rgba(255,255,255,.1)">
-                    <div class="flex items-center justify-between">
-                        <h3 id="info-title" class="font-bold text-lg" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></h3>
-                        <button onclick="toggleInfoPanel()" class="ml-2 text-white/50 hover:text-white text-lg md:hidden" style="background:none;border:none;cursor:pointer">✕</button>
+                <div class="info-section" style="border-bottom:1px solid rgba(255,255,255,.08)">
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                        <h3 id="info-title" style="font-weight:700;font-size:15px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></h3>
+                        <button onclick="toggleInfoPanel()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;display:none" class="mobile-close-info">✕</button>
                     </div>
-                    <p id="info-desc" class="text-sm text-white/70 mt-1"></p>
+                    <p id="info-desc" style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px"></p>
                 </div>
-                <div id="info-minimap" class="hidden"></div>
+                <div id="info-minimap" style="display:none"></div>
                 <div id="info-sections"></div>
             </div>
         </div>
     </div>
+    <div class="toast" id="toast">链接已复制</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -148,114 +160,79 @@
     // Theme
     function initTheme(){const s=localStorage.getItem('theme')||'light';if(s==='dark')applyDark(true);document.getElementById('theme-toggle')?.addEventListener('click',()=>toggleTheme())}
     function toggleTheme(){const d=document.body.classList.toggle('dark-mode');localStorage.setItem('theme',d?'dark':'light');applyDark(d)}
-    function applyDark(d){if(d)document.body.classList.add('dark-mode');const i=d?'☀️':'🌙';const t=document.querySelector('#theme-toggle span');if(t)t.textContent=i;const m=document.getElementById('mobile-theme-icon');if(m)m.textContent=i}
-    function toggleMobileMenu(){document.getElementById('mobile-nav').classList.toggle('open')}
-    window.addEventListener('scroll',()=>{document.getElementById('scroll-top').classList.toggle('visible',window.scrollY>400)});
+    function applyDark(d){if(d)document.body.classList.add('dark-mode');document.querySelector('#theme-toggle span').textContent=d?'☀️':'🌙'}
+    window.addEventListener('scroll',()=>{document.getElementById('scroll-top').classList.toggle('visible',window.scrollY>300)});
 
     // Categories & Search
-    async function loadCats(){try{const r=await fetch(`${API}/categories`);const c=await r.json();document.getElementById('category-filter').innerHTML='<button onclick="filterByCategory(\'\')" class="cat-btn active">全部</button>'+c.map(x=>`<button onclick="filterByCategory('${x.name}')" class="cat-btn" data-cat="${x.name}">${x.name}</button>`).join('')}catch(e){}}
+    async function loadCats(){try{const r=await fetch(`${API}/categories`);const c=await r.json();const el=document.getElementById('category-filter');el.innerHTML='<button onclick="filterByCategory(\'\')" class="cat-btn active">全部</button>'+c.map(x=>`<button onclick="filterByCategory('${x.name}')" class="cat-btn" data-cat="${x.name}">${x.name}</button>`).join('')+'<button onclick="toggleSearchBar()" class="cat-btn" style="opacity:.6">🔍</button>'}catch(e){}}
     function filterByCategory(c){curCat=c;curPage=1;document.querySelectorAll('.cat-btn').forEach(b=>{b.classList.toggle('active',(c===''&&b.textContent.includes('全部'))||b.dataset.cat===c)});loadPhotos(1)}
-    function toggleSearch(){const b=document.getElementById('search-bar');b.classList.toggle('hidden');if(!b.classList.contains('hidden'))document.getElementById('search-input').focus()}
+    function toggleSearchBar(){const fb=document.getElementById('filter-bar');fb.style.display=fb.style.display==='none'?'flex':'none';if(fb.style.display==='flex')document.getElementById('search-input').focus()}
     let sTimer;function handleSearch(e){if(e.key==='Enter'){performSearch();return}clearTimeout(sTimer);sTimer=setTimeout(()=>{if(document.getElementById('search-input').value.trim().length>0)performSearch()},300)}
     function performSearch(){clearTimeout(sTimer);curSearch=document.getElementById('search-input').value.trim();curPage=1;loadPhotos(1)}
     function clearSearch(){document.getElementById('search-input').value='';curSearch='';loadPhotos(1)}
 
     // Photos
-    async function loadPhotos(page=1){if(loading)return;loading=true;try{let u=`${API}/photos?page=${page}&size=20`;if(curCat)u+=`&category=${encodeURIComponent(curCat)}`;if(curSearch)u+=`&search=${encodeURIComponent(curSearch)}`;const r=await fetch(u);if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();total=d.total;document.getElementById('photo-count').textContent=curCat?`${curCat}: ${total} 张照片`:curSearch?`搜索: ${total} 张照片`:`共 ${total} 张照片`;
-    if(d.photos?.length>0){allPhotos=page===1?d.photos:[...allPhotos,...d.photos];renderPhotos(d.photos,page===1);document.getElementById('photo-wall').classList.remove('hidden');document.getElementById('loading').classList.add('hidden');document.getElementById('empty-state').classList.add('hidden');document.getElementById('load-more').classList.toggle('hidden',!(d.photos.length===20&&d.total>page*20))}else if(page===1){document.getElementById('empty-state').classList.remove('hidden');document.getElementById('loading').classList.add('hidden');document.getElementById('photo-wall').classList.add('hidden')}}catch(e){document.getElementById('loading').innerHTML=`<div class="text-center py-12"><p class="text-red-500 mb-4">加载失败</p><button onclick="loadPhotos(1)" class="px-6 py-3 bg-blue-600 text-white rounded-xl">重试</button></div>`}finally{loading=false}}
+    async function loadPhotos(page=1){if(loading)return;loading=true;try{let u=`${API}/photos?page=${page}&size=20`;if(curCat)u+=`&category=${encodeURIComponent(curCat)}`;if(curSearch)u+=`&search=${encodeURIComponent(curSearch)}`;const r=await fetch(u);if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();total=d.total;document.getElementById('photo-count').textContent=curCat?`${curCat} · ${total}`:curSearch?`搜索 · ${total}`:`${total} 张照片`;
+    if(d.photos?.length>0){allPhotos=page===1?d.photos:[...allPhotos,...d.photos];renderPhotos(d.photos,page===1);document.getElementById('photo-wall').style.display='';document.getElementById('loading').style.display='none';document.getElementById('empty-state').style.display='none';document.getElementById('load-more').style.display=(d.photos.length===20&&d.total>page*20)?'block':'none'}else if(page===1){document.getElementById('empty-state').style.display='block';document.getElementById('loading').style.display='none';document.getElementById('photo-wall').style.display='none'}}catch(e){document.getElementById('loading').innerHTML=`<div style="text-align:center;padding:40px"><p style="color:#ef4444;margin-bottom:12px">加载失败</p><button onclick="loadPhotos(1)" class="cat-btn">重试</button></div>`}finally{loading=false}}
+
     function renderPhotos(photos,replace){const w=document.getElementById('photo-wall');if(replace)w.innerHTML='';const f=document.createDocumentFragment();photos.forEach(p=>f.appendChild(mkCard(p)));w.appendChild(f);initLazy()}
-    function mkCard(p){const c=document.createElement('div');c.className='photo-card';const exif=[];if(p.camera_model)exif.push(p.camera_model);if(p.aperture)exif.push(p.aperture);if(p.shutter_speed)exif.push(p.shutter_speed);if(p.iso)exif.push('ISO '+p.iso);
+    function mkCard(p){const c=document.createElement('div');c.className='photo-card';
     const img=p.url?.startsWith('http')?p.url:`/uploads/${p.filename}`,thumb=p.thumbnail_url||img;
-    c.innerHTML=`<div class="card-inner" onclick="openViewer(${p.id})">${p.is_live_photo?'<div class="live-badge">LIVE</div>':''}<img data-src="${thumb}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e2e8f0' width='400' height='300'/%3E%3C/svg%3E" alt="${p.title||p.original_name}" class="w-full h-auto lazy-img" loading="lazy" onerror="this.src='${img}'"><div class="photo-overlay"><h3 class="font-semibold text-base mb-1">${p.title||p.original_name}</h3>${p.description?`<p class="text-sm text-gray-200 mb-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${p.description}</p>`:''}${exif.length?`<p class="text-xs text-gray-300 opacity-80">${exif.join(' · ')}</p>`:''}${p.location?`<p class="text-xs text-gray-300 mt-1 opacity-80">📍 ${p.location}</p>`:''}</div></div>`;
-    if(isTouch){const inner=c.querySelector('.card-inner');inner.addEventListener('touchstart',function(){c.classList.add('touch-active')});inner.addEventListener('touchend',function(){setTimeout(()=>c.classList.remove('touch-active'),1500)})}
+    c.innerHTML=`<div class="card-inner" onclick="openViewer(${p.id})">${p.is_live_photo?'<div class="live-badge">LIVE</div>':''}<img data-src="${thumb}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e2e8f0' width='400' height='300'/%3E%3C/svg%3E" alt="${p.title||p.original_name}" class="w-full h-auto lazy-img" loading="lazy" onerror="this.src='${img}'"><div class="photo-overlay"><h3>${p.title||p.original_name}</h3>${p.location?`<p>📍 ${p.location}</p>`:''}</div></div>`;
+    if(isTouch){const inner=c.querySelector('.card-inner');inner.addEventListener('touchstart',function(){c.classList.add('touch-active')});inner.addEventListener('touchend',function(){setTimeout(()=>c.classList.remove('touch-active'),1200)})}
     return c}
     function loadMore(){curPage++;loadPhotos(curPage)}
-    let lazyObs;function initLazy(){if(!lazyObs)lazyObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&e.target.dataset.src){e.target.src=e.target.dataset.src;e.target.classList.remove('lazy-img');e.target.classList.add('lazy-loaded');lazyObs.unobserve(e.target)}})},{rootMargin:'100px'});document.querySelectorAll('.lazy-img').forEach(i=>lazyObs.observe(i))}
-    let scrollT;window.addEventListener('scroll',()=>{if(scrollT)return;scrollT=setTimeout(()=>{scrollT=null;if(window.innerHeight+window.scrollY>=document.body.offsetHeight-500&&!loading){const b=document.getElementById('load-more');if(!b.classList.contains('hidden'))loadMore()}},100)});
+    let lazyObs;function initLazy(){if(!lazyObs)lazyObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&e.target.dataset.src){e.target.src=e.target.dataset.src;e.target.classList.remove('lazy-img');e.target.classList.add('lazy-loaded');lazyObs.unobserve(e.target)}})},{rootMargin:'200px'});document.querySelectorAll('.lazy-img').forEach(i=>lazyObs.observe(i))}
+    let scrollT;window.addEventListener('scroll',()=>{if(scrollT)return;scrollT=setTimeout(()=>{scrollT=null;if(window.innerHeight+window.scrollY>=document.body.offsetHeight-500&&!loading){const b=document.getElementById('load-more');if(b.style.display!=='none')loadMore()}},100)});
 
-    // === Custom Viewer ===
-    function openViewer(id){viewerPhotos=allPhotos;viewerIdx=allPhotos.findIndex(p=>p.id===id);if(viewerIdx<0)viewerIdx=0;buildThumbStrip();showViewerPhoto();document.getElementById('viewer').classList.add('open');document.body.style.overflow='hidden';infoPanelOpen=window.innerWidth>=768;if(infoPanelOpen){document.getElementById('info-panel').classList.add('open');document.getElementById('viewer-info-btn').classList.add('active')}}
-    function closeViewer(){document.getElementById('viewer').classList.remove('open');document.body.style.overflow='';document.getElementById('info-panel').classList.remove('open');document.getElementById('viewer-info-btn').classList.remove('active');infoPanelOpen=false;if(miniMap){miniMap.remove();miniMap=null}}
-    function viewerPrev(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx-1+viewerPhotos.length)%viewerPhotos.length;showViewerPhoto()}
-    function viewerNext(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx+1)%viewerPhotos.length;showViewerPhoto()}
+    // === Viewer ===
+    function openViewer(id){viewerPhotos=allPhotos;viewerIdx=allPhotos.findIndex(p=>p.id===id);if(viewerIdx<0)viewerIdx=0;buildThumbStrip();showViewerPhoto();document.getElementById('viewer').classList.add('open');document.body.style.overflow='hidden';infoPanelOpen=window.innerWidth>=768;if(infoPanelOpen){document.getElementById('info-panel').classList.add('open');document.getElementById('viewer-info-btn').classList.add('active')}
+    updateURL(viewerPhotos[viewerIdx]?.id)}
+    function closeViewer(){document.getElementById('viewer').classList.remove('open');document.body.style.overflow='';document.getElementById('info-panel').classList.remove('open');document.getElementById('viewer-info-btn').classList.remove('active');infoPanelOpen=false;if(miniMap){miniMap.remove();miniMap=null}
+    history.replaceState(null,'',window.location.pathname)}
+    function viewerPrev(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx-1+viewerPhotos.length)%viewerPhotos.length;showViewerPhoto();updateURL(viewerPhotos[viewerIdx]?.id)}
+    function viewerNext(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx+1)%viewerPhotos.length;showViewerPhoto();updateURL(viewerPhotos[viewerIdx]?.id)}
     function toggleInfoPanel(){infoPanelOpen=!infoPanelOpen;document.getElementById('info-panel').classList.toggle('open',infoPanelOpen);document.getElementById('viewer-info-btn').classList.toggle('active',infoPanelOpen)}
     document.addEventListener('keydown',e=>{if(!document.getElementById('viewer').classList.contains('open'))return;if(e.key==='Escape')closeViewer();if(e.key==='ArrowLeft')viewerPrev();if(e.key==='ArrowRight')viewerNext();if(e.key==='i'||e.key==='I')toggleInfoPanel()});
 
-    function buildThumbStrip(){const strip=document.getElementById('thumb-strip');strip.innerHTML=viewerPhotos.map((p,i)=>{const t=p.thumbnail_url||(p.url?.startsWith('http')?p.url:`/uploads/${p.filename}`);return`<div class="thumb-item${i===viewerIdx?' active':''}" onclick="jumpToPhoto(${i})" title="${p.title||p.original_name}"><img src="${t}" alt="" onerror="this.src='${p.url||''}'"></div>`}).join('')}
+    function updateURL(photoId){if(photoId)history.replaceState(null,'',`?photo=${photoId}`)}
 
-    function jumpToPhoto(idx){viewerIdx=idx;showViewerPhoto()}
+    function sharePhoto(){const p=viewerPhotos[viewerIdx];if(!p)return;const url=`${window.location.origin}?photo=${p.id}`;navigator.clipboard.writeText(url).then(()=>{showToast('链接已复制到剪贴板');const btn=document.getElementById('viewer-share');btn.classList.add('copied');setTimeout(()=>btn.classList.remove('copied'),1500)}).catch(()=>{const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('链接已复制')})}
+    function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+
+    function buildThumbStrip(){const strip=document.getElementById('thumb-strip');strip.innerHTML=viewerPhotos.map((p,i)=>{const t=p.thumbnail_url||(p.url?.startsWith('http')?p.url:`/uploads/${p.filename}`);return`<div class="thumb-item${i===viewerIdx?' active':''}" onclick="jumpToPhoto(${i})"><img src="${t}" alt="" onerror="this.src='${p.url||''}'"></div>`}).join('')}
+    function jumpToPhoto(idx){viewerIdx=idx;showViewerPhoto();updateURL(viewerPhotos[viewerIdx]?.id)}
 
     function showViewerPhoto(){const p=viewerPhotos[viewerIdx];if(!p)return;
     const img=document.getElementById('viewer-img');img.src=p.url?.startsWith('http')?p.url:`/uploads/${p.filename}`;img.alt=p.title||p.original_name;
-    document.getElementById('viewer-counter').textContent=`${viewerIdx+1} / ${viewerPhotos.length}`;
     document.getElementById('info-title').textContent=p.title||p.original_name;
     document.getElementById('info-desc').textContent=p.description||'';
     document.getElementById('info-desc').style.display=p.description?'':'none';
-    // Update thumbnail active state
     document.querySelectorAll('.thumb-item').forEach((t,i)=>{t.classList.toggle('active',i===viewerIdx)});
-    const activeThumb=document.querySelector('.thumb-item.active');if(activeThumb)activeThumb.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+    const at=document.querySelector('.thumb-item.active');if(at)at.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
     buildInfoSections(p);buildMiniMap(p)}
 
-    function buildInfoSections(p){
-    let h='';
-    // Basic Info
-    const basic=[];
-    if(p.original_name)basic.push(r('📄','文件名',p.original_name));
-    if(p.file_size)basic.push(r('💾','文件大小',fmtBytes(p.file_size)));
-    if(p.width&&p.height){basic.push(r('📐','分辨率',`${p.width} × ${p.height}`));basic.push(r('🔲','像素',`${(p.width*p.height/1e6).toFixed(2)} MP`))}
-    if(p.date_taken)basic.push(r('📅','拍摄日期',new Date(p.date_taken).toLocaleString('zh-CN')));
-    if(p.color_space)basic.push(r('🎨','色彩空间',p.color_space));
-    if(p.software)basic.push(r('📱','软件',p.software));
-    if(p.location)basic.push(r('📍','位置',p.location));
-    if(p.gps_latitude&&p.gps_longitude)basic.push(r('🌐','GPS',fmtGPS(p.gps_latitude,p.gps_longitude)));
-    if(basic.length)h+=sec('基本信息',basic.join(''));
-
-    // Capture Parameters
-    const cap=[];
-    if(p.focal_length)cap.push(r('🔭','焦距',p.focal_length));
-    if(p.aperture)cap.push(r('⭕','光圈',p.aperture));
-    if(p.shutter_speed)cap.push(r('⏱️','快门',p.shutter_speed));
-    if(p.iso)cap.push(r('☀️','ISO',p.iso));
-    if(p.exposure_bias)cap.push(r('±','曝光补偿',p.exposure_bias));
-    if(cap.length)h+=sec('拍摄参数',cap.join(''));
-
-    // Device Info
-    const dev=[];
-    if(p.camera_make||p.camera_model)dev.push(r('📷','相机',[p.camera_make,p.camera_model].filter(Boolean).join(' ')));
-    if(p.lens_model)dev.push(r('🔍','镜头',p.lens_model));
-    if(dev.length)h+=sec('设备信息',dev.join(''));
-
-    // Shooting Mode
-    const mode=[];
-    if(p.white_balance)mode.push(r('🌡️','白平衡',p.white_balance));
-    if(p.exposure_mode)mode.push(r('📸','曝光模式',p.exposure_mode));
-    if(p.metering_mode)mode.push(r('🎯','测光模式',p.metering_mode));
-    if(p.flash)mode.push(r('⚡','闪光灯',p.flash));
-    if(p.scene_type)mode.push(r('🏞️','场景类型',p.scene_type));
-    if(mode.length)h+=sec('拍摄模式',mode.join(''));
-
-    // Tags & Category
-    const meta=[];
-    if(p.category)meta.push(`<div style="margin-bottom:8px"><span class="info-tag">📁 ${p.category}</span></div>`);
-    if(p.tags)meta.push(`<div class="flex flex-wrap">${p.tags.split(',').map(t=>`<span class="info-tag">${t.trim()}</span>`).join('')}</div>`);
-    if(p.is_live_photo)meta.push(`<div style="margin-top:8px"><span class="info-tag" style="background:rgba(244,63,94,.3)">● LIVE PHOTO</span></div>`);
-    if(meta.length)h+=sec('标签与分类',meta.join(''));
-
+    function buildInfoSections(p){let h='';
+    const basic=[];if(p.original_name)basic.push(r('📄','文件名',p.original_name));if(p.file_size)basic.push(r('💾','大小',fmtBytes(p.file_size)));if(p.width&&p.height){basic.push(r('📐','分辨率',`${p.width}×${p.height}`));basic.push(r('🔲','像素',`${(p.width*p.height/1e6).toFixed(1)} MP`))}if(p.date_taken)basic.push(r('📅','日期',new Date(p.date_taken).toLocaleString('zh-CN')));if(p.color_space)basic.push(r('🎨','色彩',p.color_space));if(p.software)basic.push(r('📱','软件',p.software));if(p.location)basic.push(r('📍','位置',p.location));if(p.gps_latitude&&p.gps_longitude)basic.push(r('🌐','GPS',fmtGPS(p.gps_latitude,p.gps_longitude)));if(basic.length)h+=sec('基本信息',basic.join(''));
+    const cap=[];if(p.focal_length)cap.push(r('🔭','焦距',p.focal_length));if(p.aperture)cap.push(r('⭕','光圈',p.aperture));if(p.shutter_speed)cap.push(r('⏱','快门',p.shutter_speed));if(p.iso)cap.push(r('☀️','ISO',p.iso));if(p.exposure_bias)cap.push(r('±','曝光补偿',p.exposure_bias));if(cap.length)h+=sec('拍摄参数',cap.join(''));
+    const dev=[];if(p.camera_make||p.camera_model)dev.push(r('📷','相机',[p.camera_make,p.camera_model].filter(Boolean).join(' ')));if(p.lens_model)dev.push(r('🔍','镜头',p.lens_model));if(dev.length)h+=sec('设备信息',dev.join(''));
+    const mode=[];if(p.white_balance)mode.push(r('🌡','白平衡',p.white_balance));if(p.exposure_mode)mode.push(r('📸','曝光',p.exposure_mode));if(p.metering_mode)mode.push(r('🎯','测光',p.metering_mode));if(p.flash)mode.push(r('⚡','闪光灯',p.flash));if(p.scene_type)mode.push(r('🏞','场景',p.scene_type));if(mode.length)h+=sec('拍摄模式',mode.join(''));
+    const meta=[];if(p.category)meta.push(`<div style="margin-bottom:6px"><span class="info-tag">📁 ${p.category}</span></div>`);if(p.tags)meta.push(`<div style="display:flex;flex-wrap:wrap">${p.tags.split(',').map(t=>`<span class="info-tag">${t.trim()}</span>`).join('')}</div>`);if(p.is_live_photo)meta.push(`<div style="margin-top:6px"><span class="info-tag" style="background:rgba(244,63,94,.25)">● LIVE</span></div>`);if(meta.length)h+=sec('标签',meta.join(''));
     document.getElementById('info-sections').innerHTML=h}
+    function sec(t,c){return`<div class="info-section"><div class="info-section-title">${t}</div>${c}</div>`}
+    function r(i,l,v){return`<div class="info-row"><span class="info-label">${i} ${l}</span><span class="info-value">${v}</span></div>`}
+    function fmtBytes(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB'}
+    function fmtGPS(la,ln){return`${Math.abs(la).toFixed(4)}°${la>=0?'N':'S'}, ${Math.abs(ln).toFixed(4)}°${ln>=0?'E':'W'}`}
+    function buildMiniMap(p){const el=document.getElementById('info-minimap');if(miniMap){miniMap.remove();miniMap=null}if(p.gps_latitude&&p.gps_longitude){el.style.display='';setTimeout(()=>{miniMap=L.map(el,{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false}).setView([p.gps_latitude,p.gps_longitude],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);L.marker([p.gps_latitude,p.gps_longitude]).addTo(miniMap);miniMap.invalidateSize()},100)}else{el.style.display='none'}}
 
-    function sec(title,content){return`<div class="info-section"><div class="info-section-title">${title}</div>${content}</div>`}
-    function r(icon,label,value){return`<div class="info-row"><span class="info-label">${icon} ${label}</span><span class="info-value">${value}</span></div>`}
-    function fmtBytes(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(2)+' MB'}
-    function fmtGPS(lat,lng){const ld=lat>=0?'N':'S',ld2=lng>=0?'E':'W';return`${Math.abs(lat).toFixed(4)}°${ld}, ${Math.abs(lng).toFixed(4)}°${ld2}`}
-
-    function buildMiniMap(p){const el=document.getElementById('info-minimap');if(miniMap){miniMap.remove();miniMap=null}
-    if(p.gps_latitude&&p.gps_longitude){el.classList.remove('hidden');setTimeout(()=>{miniMap=L.map(el,{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false}).setView([p.gps_latitude,p.gps_longitude],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);L.marker([p.gps_latitude,p.gps_longitude]).addTo(miniMap);miniMap.invalidateSize()},100)}else{el.classList.add('hidden')}}
-
-    // Touch swipe for viewer
+    // Touch swipe
     let touchStartX=0;document.getElementById('viewer')?.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX},{passive:true});
     document.getElementById('viewer')?.addEventListener('touchend',e=>{const diff=e.changedTouches[0].clientX-touchStartX;if(Math.abs(diff)>50){diff>0?viewerPrev():viewerNext()}},{passive:true});
 
-    document.addEventListener('DOMContentLoaded',()=>{initTheme();loadCats();loadPhotos(1)});
+    // Deep link: open photo from URL ?photo=ID
+    function checkDeepLink(){const params=new URLSearchParams(window.location.search);const photoId=params.get('photo');if(photoId){const waitForPhotos=setInterval(()=>{if(allPhotos.length>0){clearInterval(waitForPhotos);const id=parseInt(photoId);if(id)openViewer(id)}},200);setTimeout(()=>clearInterval(waitForPhotos),5000)}}
+
+    document.addEventListener('DOMContentLoaded',()=>{initTheme();loadCats();loadPhotos(1);checkDeepLink()});
     </script>
 </body>
 </html>

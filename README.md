@@ -176,64 +176,268 @@ make dev     # 热重载
 
 ---
 
-## 🔧 配置
+## 🔧 配置详解
 
-配置文件 `config.yaml`，从 `config.example.yaml` 复制修改。
+配置文件为项目根目录下的 `config.yaml`，首次使用请从示例文件复制：
 
-### 数据库
+```bash
+cp config.example.yaml config.yaml
+```
+
+以下逐项说明每个配置块。**只需修改你用到的部分**，未用到的保持默认即可。
+
+### 服务器配置
+
+```yaml
+server:
+  host: "0.0.0.0"       # 监听地址，0.0.0.0 表示所有网卡
+  port: 8080             # 监听端口
+  mode: "release"        # 运行模式：debug（开发，输出详细日志）/ release（生产）/ test
+```
+
+> 开发时建议设为 `debug`，可以看到每个请求的详细日志。
+
+### 数据库配置
+
+通过 `database.type` 切换数据库类型，**只需配置你选用的那一种**。
+
+#### SQLite（默认，零依赖）
 
 ```yaml
 database:
-  type: "sqlite"  # sqlite / mysql / postgres
+  type: "sqlite"
   sqlite:
-    path: "./data/mygallery.db"
+    path: "./data/mygallery.db"   # 数据库文件路径，会自动创建
 ```
 
-### 存储
+> SQLite 不需要额外安装数据库服务，适合个人部署。数据库文件保存在 `data/` 目录下。
+
+#### MySQL
+
+```yaml
+database:
+  type: "mysql"
+  mysql:
+    host: "localhost"        # MySQL 主机地址
+    port: 3306               # 端口
+    username: "root"         # 用户名
+    password: "your-pass"    # 密码
+    database: "mygallery"    # 数据库名（需提前创建）
+    charset: "utf8mb4"       # 字符集，建议 utf8mb4 以支持 emoji
+```
+
+> 需要提前创建数据库：`CREATE DATABASE mygallery CHARACTER SET utf8mb4;`
+
+#### PostgreSQL
+
+```yaml
+database:
+  type: "postgres"
+  postgres:
+    host: "localhost"        # PostgreSQL 主机地址
+    port: 5432               # 端口
+    username: "postgres"     # 用户名
+    password: "your-pass"    # 密码
+    database: "mygallery"    # 数据库名（需提前创建）
+    sslmode: "disable"       # SSL 模式：disable / require / verify-full
+```
+
+> 需要提前创建数据库：`CREATE DATABASE mygallery;`
+
+### 存储配置
+
+通过 `storage.type` 切换存储后端。所有后端均支持自动生成和上传缩略图。
+
+#### 本地存储（默认）
 
 ```yaml
 storage:
-  type: "local"  # local / s3 / minio / aliyun
+  type: "local"
   local:
-    upload_dir: "./uploads"
-    thumbnail_dir: "./uploads/thumbnails"
-    url_prefix: "/uploads"
+    upload_dir: "./uploads"              # 原图存放目录
+    thumbnail_dir: "./uploads/thumbnails" # 缩略图目录
+    url_prefix: "/uploads"               # 前端访问 URL 前缀
 ```
 
-<details>
-<summary>S3 / MinIO / 阿里云 OSS 配置</summary>
+#### AWS S3
 
 ```yaml
-# AWS S3
 storage:
   type: "s3"
   s3:
-    region: "us-east-1"
-    bucket: "mygallery"
-    access_key: "YOUR_KEY"
-    secret_key: "YOUR_SECRET"
-    url_prefix: "https://bucket.s3.amazonaws.com"
+    region: "us-east-1"                              # AWS 区域
+    bucket: "mygallery"                              # S3 Bucket 名称
+    access_key: "AKIAIOSFODNN7EXAMPLE"               # Access Key ID
+    secret_key: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLE"  # Secret Access Key
+    endpoint: ""                                     # 留空使用 AWS 默认端点，或填自定义端点
+    url_prefix: "https://mygallery.s3.amazonaws.com" # 图片访问 URL 前缀
+```
 
-# MinIO
+> `endpoint` 留空会使用 AWS 默认端点。如果使用兼容 S3 协议的服务（如 Cloudflare R2），需要填写对应的 endpoint。
+
+#### MinIO（自建 S3 兼容存储）
+
+```yaml
 storage:
   type: "minio"
   minio:
-    endpoint: "localhost:9000"
-    bucket: "mygallery"
-    access_key: "minioadmin"
-    secret_key: "minioadmin"
-    use_ssl: false
-    url_prefix: "http://localhost:9000/mygallery"
+    endpoint: "localhost:9000"                      # MinIO 服务地址（不含 http://）
+    bucket: "mygallery"                             # Bucket 名称，不存在会自动创建
+    access_key: "minioadmin"                        # Access Key
+    secret_key: "minioadmin"                        # Secret Key
+    use_ssl: false                                  # 是否使用 HTTPS
+    url_prefix: "http://localhost:9000/mygallery"   # 图片访问 URL 前缀
+```
 
-# 阿里云 OSS
+#### 阿里云 OSS
+
+```yaml
 storage:
   type: "aliyun"
   aliyun:
-    endpoint: "oss-cn-hangzhou.aliyuncs.com"
-    bucket: "mygallery"
-    access_key: "YOUR_KEY"
-    secret_key: "YOUR_SECRET"
-    url_prefix: "https://mygallery.oss-cn-hangzhou.aliyuncs.com"
+    endpoint: "oss-cn-hangzhou.aliyuncs.com"              # OSS Endpoint（不含 Bucket 名）
+    bucket: "mygallery"                                   # Bucket 名称
+    access_key: "LTAI5tExample"                           # AccessKey ID
+    secret_key: "HpMGhExample"                            # AccessKey Secret
+    url_prefix: "https://mygallery.oss-cn-hangzhou.aliyuncs.com"  # 访问 URL 前缀
+```
+
+> 阿里云 Endpoint 列表参考：[OSS 各地域 Endpoint](https://help.aliyun.com/document_detail/31837.html)
+
+### JWT 认证配置
+
+```yaml
+jwt:
+  secret: "your-secret-key-change-this"   # JWT 签名密钥，⚠️ 生产环境务必修改！
+  expire_hours: 168                       # Token 有效期（小时），默认 7 天
+```
+
+> **安全提示**：`secret` 建议使用随机字符串，至少 32 位。可以用 `openssl rand -hex 32` 生成。
+
+### 管理员配置
+
+```yaml
+admin:
+  username: "admin"          # 管理员用户名
+  password: "admin123"       # 初始密码，首次启动后自动加密存储
+  email: "admin@example.com" # 管理员邮箱
+```
+
+> 首次启动时会用此配置创建管理员账号。密码会自动 bcrypt 加密，修改配置文件中的密码不会影响已创建的账号。如需重置密码，删除 `data/mygallery.db` 重新初始化。
+
+### 图片处理配置
+
+```yaml
+image:
+  max_upload_size: 52428800   # 单张图片最大上传大小（字节），默认 50MB
+  allowed_types:              # 允许上传的图片 MIME 类型
+    - "image/jpeg"
+    - "image/png"
+    - "image/gif"
+    - "image/webp"
+  thumbnail:
+    width: 400                # 缩略图最大宽度（像素）
+    height: 400               # 缩略图最大高度（像素）
+    quality: 85               # 缩略图 JPEG 压缩质量（1-100）
+```
+
+### CORS 跨域配置
+
+```yaml
+cors:
+  enabled: true               # 是否启用 CORS
+  allow_origins:              # 允许的来源域名
+    - "*"                     # * 表示允许所有域名，生产环境建议指定具体域名
+  allow_methods:              # 允许的 HTTP 方法
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  allow_headers:              # 允许的请求头
+    - "Origin"
+    - "Content-Type"
+    - "Authorization"
+```
+
+### 应用配置
+
+```yaml
+app:
+  name: "MYGallery"                                     # 应用名称
+  version: "1.1.4"                                      # 版本号
+  site_title: "MYGallery"                               # 网站标题
+  site_description: "A simple and beautiful photo gallery system"  # 网站描述
+  pagination:
+    page_size: 20                                       # 默认每页照片数
+```
+
+### 完整配置示例
+
+<details>
+<summary>点击查看完整 config.yaml 示例（MySQL + S3）</summary>
+
+```yaml
+server:
+  host: "0.0.0.0"
+  port: 8080
+  mode: "release"
+
+database:
+  type: "mysql"
+  mysql:
+    host: "db.example.com"
+    port: 3306
+    username: "mygallery"
+    password: "StrongP@ssw0rd"
+    database: "mygallery"
+    charset: "utf8mb4"
+
+storage:
+  type: "s3"
+  s3:
+    region: "ap-northeast-1"
+    bucket: "my-gallery-photos"
+    access_key: "AKIAIOSFODNN7EXAMPLE"
+    secret_key: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLE"
+    endpoint: ""
+    url_prefix: "https://my-gallery-photos.s3.ap-northeast-1.amazonaws.com"
+
+jwt:
+  secret: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+  expire_hours: 72
+
+admin:
+  username: "admin"
+  password: "MySecureP@ss123"
+  email: "admin@example.com"
+
+image:
+  max_upload_size: 104857600  # 100MB
+  allowed_types:
+    - "image/jpeg"
+    - "image/png"
+    - "image/gif"
+    - "image/webp"
+  thumbnail:
+    width: 600
+    height: 600
+    quality: 80
+
+cors:
+  enabled: true
+  allow_origins:
+    - "https://gallery.example.com"
+  allow_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  allow_headers: ["Origin", "Content-Type", "Authorization"]
+
+app:
+  name: "My Photo Gallery"
+  version: "1.1.4"
+  site_title: "My Photo Gallery"
+  site_description: "Personal photography showcase"
+  pagination:
+    page_size: 30
 ```
 
 </details>

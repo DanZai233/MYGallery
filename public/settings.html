@@ -188,6 +188,36 @@
                 </button>
             </div>
         </form>
+
+        <!-- 修改密码 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">修改密码</h2>
+            <form id="password-form" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">当前密码</label>
+                    <input type="password" id="old-password" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                           placeholder="请输入当前密码">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">新密码</label>
+                    <input type="password" id="new-password" required minlength="6"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                           placeholder="至少 6 位">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">确认新密码</label>
+                    <input type="password" id="confirm-password" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                           placeholder="再次输入新密码">
+                </div>
+                <div id="pwd-error" class="hidden text-red-600 text-sm"></div>
+                <div id="pwd-success" class="hidden text-green-600 text-sm"></div>
+                <button type="submit" class="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition">
+                    修改密码
+                </button>
+            </form>
+        </div>
     </main>
 
     <script>
@@ -269,6 +299,52 @@
                 }
             } catch (error) {
                 alert('保存失败: 网络错误');
+            }
+        });
+
+        // 修改密码
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('pwd-error');
+            const okEl = document.getElementById('pwd-success');
+            errEl.classList.add('hidden'); okEl.classList.add('hidden');
+
+            const oldPwd = document.getElementById('old-password').value;
+            const newPwd = document.getElementById('new-password').value;
+            const confirmPwd = document.getElementById('confirm-password').value;
+
+            if (newPwd !== confirmPwd) {
+                errEl.textContent = '两次输入的新密码不一致';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (newPwd.length < 6) {
+                errEl.textContent = '新密码至少 6 位';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ old_password: oldPwd, new_password: newPwd })
+                });
+                if (response.ok) {
+                    okEl.textContent = '密码修改成功！';
+                    okEl.classList.remove('hidden');
+                    document.getElementById('password-form').reset();
+                } else {
+                    const err = await response.json();
+                    errEl.textContent = err.error || '修改失败';
+                    errEl.classList.remove('hidden');
+                }
+            } catch (error) {
+                errEl.textContent = '网络错误';
+                errEl.classList.remove('hidden');
             }
         });
 

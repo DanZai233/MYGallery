@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>相册 - MYGallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:#0a0a0a;color:#e5e5e5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;min-height:100vh}
+        .album-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px}
+        .album-card{position:relative;border-radius:16px;overflow:hidden;cursor:pointer;background:#171717;transition:transform .3s,box-shadow .3s;aspect-ratio:16/10}
+        .album-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+        .album-card img{width:100%;height:100%;object-fit:cover;transition:transform .5s}.album-card:hover img{transform:scale(1.05)}
+        .album-info{position:absolute;bottom:0;left:0;right:0;padding:40px 16px 16px;background:linear-gradient(to top,rgba(0,0,0,.8),transparent);color:#fff}
+        .album-info h3{font-size:18px;font-weight:700} .album-info p{font-size:12px;opacity:.7;margin-top:2px}
+        .album-count{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px}
+        .back-btn{position:fixed;top:16px;left:16px;z-index:50;width:40px;height:40px;background:rgba(255,255,255,.08);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-size:18px;transition:background .2s}
+        .back-btn:hover{background:rgba(255,255,255,.15)}
+        .page-title{text-align:center;padding:24px 16px 8px;font-size:14px;color:#525252;font-weight:500;letter-spacing:2px;text-transform:uppercase}
+        .empty{text-align:center;padding:80px 20px;color:#525252}
+
+        .photo-grid{column-count:4;column-gap:4px;padding:4px}
+        @media(max-width:1200px){.photo-grid{column-count:3}} @media(max-width:768px){.photo-grid{column-count:2}}
+        .photo-item{break-inside:avoid;margin-bottom:4px;cursor:pointer;position:relative;overflow:hidden;border-radius:4px}
+        .photo-item img{width:100%;display:block;transition:transform .4s}.photo-item:hover img{transform:scale(1.04)}
+        .album-header{padding:20px 16px;display:flex;align-items:center;gap:12px}
+        .album-header h1{font-size:20px;font-weight:700} .album-header .desc{font-size:13px;color:#737373;margin-top:2px}
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn" title="返回">←</a>
+
+    <!-- Album list view -->
+    <div id="album-list">
+        <div class="page-title">相册</div>
+        <div class="album-grid" id="albums-grid"></div>
+        <div class="empty" id="albums-empty" style="display:none">
+            <div style="font-size:40px;margin-bottom:12px">📂</div>
+            <p>暂无相册</p>
+        </div>
+    </div>
+
+    <!-- Album detail view -->
+    <div id="album-detail" style="display:none">
+        <div class="album-header">
+            <a href="#" onclick="showAlbumList();return false" style="color:#737373;font-size:20px;text-decoration:none">←</a>
+            <div>
+                <h1 id="detail-title"></h1>
+                <div class="desc" id="detail-desc"></div>
+            </div>
+            <span id="detail-count" style="font-size:12px;color:#525252;margin-left:auto"></span>
+        </div>
+        <div class="photo-grid" id="detail-photos"></div>
+    </div>
+
+    <script>
+    async function loadAlbums(){
+        try{
+            const r=await fetch('/api/albums');const albums=await r.json();
+            if(!albums||albums.length===0){document.getElementById('albums-empty').style.display='block';return}
+            document.getElementById('albums-grid').innerHTML=albums.map(a=>`
+                <div class="album-card" onclick="openAlbum(${a.id})">
+                    ${a.cover_url?`<img src="${a.cover_url}" alt="${a.title}">`:`<div style="width:100%;height:100%;background:#262626;display:flex;align-items:center;justify-content:center;font-size:40px">📷</div>`}
+                    <span class="album-count">${a.photo_count} 张</span>
+                    <div class="album-info"><h3>${a.title}</h3>${a.description?`<p>${a.description}</p>`:''}</div>
+                </div>`).join('');
+        }catch(e){console.error(e)}
+    }
+
+    async function openAlbum(id){
+        try{
+            const r=await fetch(`/api/albums/${id}?size=100`);const d=await r.json();
+            document.getElementById('album-list').style.display='none';
+            document.getElementById('album-detail').style.display='block';
+            document.getElementById('detail-title').textContent=d.album.title;
+            document.getElementById('detail-desc').textContent=d.album.description||'';
+            document.getElementById('detail-count').textContent=d.total+' 张照片';
+            document.getElementById('detail-photos').innerHTML=(d.photos||[]).map(p=>{
+                const url=p.thumbnail_url||p.url;
+                return`<div class="photo-item" onclick="window.open('/?photo=${p.id}','_blank')"><img src="${url}" alt="${p.title||''}"></div>`
+            }).join('');
+        }catch(e){console.error(e)}
+    }
+
+    function showAlbumList(){
+        document.getElementById('album-list').style.display='block';
+        document.getElementById('album-detail').style.display='none';
+    }
+
+    loadAlbums();
+    </script>
+</body>
+</html>

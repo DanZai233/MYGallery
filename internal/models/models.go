@@ -83,6 +83,26 @@ type Photo struct {
 	Views     int    `gorm:"default:0" json:"views"`
 }
 
+// Album 相册模型
+type Album struct {
+	ID          uint           `gorm:"primarykey" json:"id"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	Title       string         `gorm:"not null" json:"title"`
+	Description string         `gorm:"type:text" json:"description"`
+	CoverURL    string         `gorm:"-" json:"cover_url"`
+	PhotoCount  int64          `gorm:"-" json:"photo_count"`
+}
+
+// PhotoAlbum 照片-相册关联表
+type PhotoAlbum struct {
+	ID        uint      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	PhotoID   uint      `gorm:"not null;index" json:"photo_id"`
+	AlbumID   uint      `gorm:"not null;index" json:"album_id"`
+}
+
 // PhotoReaction 照片表态模型
 type PhotoReaction struct {
 	ID           uint      `gorm:"primarykey" json:"id"`

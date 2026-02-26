@@ -26,6 +26,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	r.StaticFile("/settings.html", "./public/settings.html")
 	r.StaticFile("/categories.html", "./public/categories.html")
 	r.StaticFile("/map.html", "./public/map.html")
+	r.StaticFile("/albums.html", "./public/albums.html")
 	r.StaticFile("/test", "./test-frontend.html")
 	r.Static("/assets", "./public/assets")
 	
@@ -34,6 +35,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	photoHandler := handlers.NewPhotoHandler(cfg)
 	settingsHandler := handlers.NewSettingsHandler(cfg)
 	reactionHandler := handlers.NewReactionHandler()
+	albumHandler := handlers.NewAlbumHandler()
 	
 	// API 路由组
 	api := r.Group("/api")
@@ -55,10 +57,14 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		api.GET("/settings", settingsHandler.GetSettings)
 		api.GET("/categories", settingsHandler.GetCategories)
 
-		// 表态相关（公开接口，通过指纹识别用户）
+		// 表态相关（公开接口）
 		api.GET("/photos/:id/reactions", reactionHandler.GetReactions)
 		api.POST("/photos/:id/reactions", reactionHandler.AddReaction)
 		api.DELETE("/photos/:id/reactions", reactionHandler.DeleteReaction)
+
+		// 相册（公开读取）
+		api.GET("/albums", albumHandler.GetAlbums)
+		api.GET("/albums/:id", albumHandler.GetAlbum)
 		
 		// 需要认证的接口
 		authRequired := api.Group("")
@@ -74,6 +80,13 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			
 			// 设置管理
 			authRequired.PUT("/settings", settingsHandler.UpdateSettings)
+
+			// 相册管理
+			authRequired.POST("/albums", albumHandler.CreateAlbum)
+			authRequired.PUT("/albums/:id", albumHandler.UpdateAlbum)
+			authRequired.DELETE("/albums/:id", albumHandler.DeleteAlbum)
+			authRequired.POST("/albums/:id/photos", albumHandler.AddPhotos)
+			authRequired.DELETE("/albums/:id/photos/:photoId", albumHandler.RemovePhoto)
 			
 			// 分类管理
 			authRequired.POST("/categories", settingsHandler.CreateCategory)

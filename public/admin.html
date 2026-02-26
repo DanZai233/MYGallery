@@ -157,9 +157,15 @@
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold text-gray-800">照片管理</h2>
-                    <button onclick="loadPhotos()" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
-                        🔄 刷新
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <div id="batch-bar" class="hidden flex items-center gap-2">
+                            <span class="text-sm text-gray-500" id="select-count">已选 0</span>
+                            <button onclick="batchDelete()" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100">批量删除</button>
+                            <button onclick="clearSelection()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">取消</button>
+                        </div>
+                        <button onclick="toggleSelectMode()" class="px-3 py-1.5 bg-gray-100 rounded-lg text-sm hover:bg-gray-200" id="select-btn">☑ 选择</button>
+                        <button onclick="loadPhotos()" class="px-3 py-1.5 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">🔄 刷新</button>
+                    </div>
                 </div>
                 
                 <!-- 加载状态 -->
@@ -419,19 +425,23 @@
         }
 
         // 创建照片卡片
+        let selectMode=false, selectedIds=new Set();
+        function toggleSelectMode(){selectMode=!selectMode;selectedIds.clear();document.getElementById('select-btn').textContent=selectMode?'✕ 取消选择':'☑ 选择';document.getElementById('batch-bar').classList.toggle('hidden',!selectMode);updateSelectCount();loadPhotos()}
+        function clearSelection(){selectedIds.clear();updateSelectCount();document.querySelectorAll('.photo-check').forEach(c=>c.checked=false)}
+        function toggleSelect(id,el){if(el.checked)selectedIds.add(id);else selectedIds.delete(id);updateSelectCount()}
+        function updateSelectCount(){document.getElementById('select-count').textContent=`已选 ${selectedIds.size}`;document.getElementById('batch-bar').classList.toggle('hidden',!selectMode)}
+        async function batchDelete(){if(selectedIds.size===0)return;if(!confirm(`确定删除选中的 ${selectedIds.size} 张照片？不可恢复。`))return;for(const id of selectedIds){await fetch(`${API_BASE}/photos/${id}`,{method:'DELETE',headers:{'Authorization':`Bearer ${token}`}})}selectedIds.clear();loadPhotos();updateStats();updateSelectCount()}
+
         function createPhotoCard(photo) {
             return `
                 <div class="relative group">
+                    ${selectMode?`<input type="checkbox" class="photo-check absolute top-2 left-2 z-10 w-5 h-5 accent-blue-600 cursor-pointer" onchange="toggleSelect(${photo.id},this)" ${selectedIds.has(photo.id)?'checked':''}>`:''}
                     <img src="${photo.thumbnail_url || photo.url}" 
                          alt="${photo.title || photo.original_name}"
-                         class="w-full h-40 object-cover rounded-lg">
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <button onclick="editPhoto(${photo.id})" class="px-3 py-1 bg-blue-600 text-white rounded mr-2 hover:bg-blue-700">
-                            编辑
-                        </button>
-                        <button onclick="deletePhoto(${photo.id})" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">
-                            删除
-                        </button>
+                         class="w-full h-40 object-cover rounded-lg" ${selectMode?`onclick="event.preventDefault();const c=this.parentElement.querySelector('.photo-check');c.checked=!c.checked;toggleSelect(${photo.id},c)"`:''}>
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 ${selectMode?'pointer-events-none':''}">
+                        <button onclick="editPhoto(${photo.id})" class="px-3 py-1 bg-blue-600 text-white rounded mr-2 hover:bg-blue-700">编辑</button>
+                        <button onclick="deletePhoto(${photo.id})" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">删除</button>
                     </div>
                     <p class="mt-2 text-sm text-gray-700 truncate">${photo.title || photo.original_name}</p>
                 </div>

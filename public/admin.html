@@ -508,49 +508,70 @@
         }
 
         // 上传单个文件
-        async function uploadFile(file) {
-            const queue = document.getElementById('upload-queue');
-            const itemId = 'upload-' + Date.now();
-            
-            const item = document.createElement('div');
-            item.id = itemId;
-            item.className = 'bg-gray-50 p-4 rounded-lg';
-            item.innerHTML = `
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-700">${file.name}</span>
-                    <span class="text-sm text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: 0%"></div>
-                </div>
-                <p class="text-sm text-gray-500 mt-2">上传中...</p>
-            `;
-            queue.appendChild(item);
-            
-            const formData = new FormData();
-            formData.append('photo', file);
-            
-            try {
-                const response = await fetch(`${API_BASE}/photos`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
+        function uploadFile(file) {
+            return new Promise((resolve) => {
+                const queue = document.getElementById('upload-queue');
+                const item = document.createElement('div');
+                item.className = 'bg-gray-50 p-4 rounded-lg';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700 truncate" style="max-width:60%">${file.name}</span>
+                        <span class="text-sm text-gray-400" id="upload-stats">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                        <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-200" style="width:0%"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1.5">准备中...</p>
+                `;
+                queue.appendChild(item);
+                const bar = item.querySelector('.bg-blue-600');
+                const stats = item.querySelector('#upload-stats');
+                const msg = item.querySelector('p');
+                const startTime = Date.now();
+
+                const xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round(e.loaded / e.total * 100);
+                        bar.style.width = pct + '%';
+                        stats.textContent = pct + '%';
+                        const elapsed = (Date.now() - startTime) / 1000;
+                        const speed = e.loaded / elapsed;
+                        const remaining = (e.total - e.loaded) / speed;
+                        const speedStr = speed > 1048576 ? (speed/1048576).toFixed(1)+' MB/s' : (speed/1024).toFixed(0)+' KB/s';
+                        msg.textContent = pct < 100 ? `${speedStr} · 剩余 ${Math.ceil(remaining)}s` : '处理中...';
+                    }
                 });
-                
-                if (response.ok) {
-                    item.querySelector('.bg-blue-600').style.width = '100%';
-                    item.querySelector('p').textContent = '上传成功！';
-                    item.querySelector('p').className = 'text-sm text-green-600 mt-2';
-                    setTimeout(() => item.remove(), 2000);
-                } else {
-                    const error = await response.json();
-                    item.querySelector('p').textContent = '上传失败: ' + (error.error || '未知错误');
-                    item.querySelector('p').className = 'text-sm text-red-600 mt-2';
-                }
-            } catch (error) {
-                item.querySelector('p').textContent = '上传失败: 网络错误';
-                item.querySelector('p').className = 'text-sm text-red-600 mt-2';
-            }
+                xhr.addEventListener('load', () => {
+                    if (xhr.status === 200) {
+                        bar.style.width = '100%';
+                        bar.className = 'bg-green-500 h-1.5 rounded-full';
+                        stats.textContent = '✓';
+                        msg.textContent = '上传成功';
+                        msg.className = 'text-xs text-green-600 mt-1.5';
+                        setTimeout(() => item.remove(), 2500);
+                    } else {
+                        let errMsg = '未知错误';
+                        try { errMsg = JSON.parse(xhr.responseText).error || errMsg; } catch(e){}
+                        bar.className = 'bg-red-500 h-1.5 rounded-full';
+                        msg.textContent = '失败: ' + errMsg;
+                        msg.className = 'text-xs text-red-500 mt-1.5';
+                    }
+                    resolve();
+                });
+                xhr.addEventListener('error', () => {
+                    bar.className = 'bg-red-500 h-1.5 rounded-full';
+                    msg.textContent = '网络错误';
+                    msg.className = 'text-xs text-red-500 mt-1.5';
+                    resolve();
+                });
+
+                const formData = new FormData();
+                formData.append('photo', file);
+                xhr.open('POST', `${API_BASE}/photos`);
+                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                xhr.send(formData);
+            });
         }
 
         // 编辑照片

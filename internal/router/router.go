@@ -77,6 +77,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	r.StaticFile("/categories.html", "./public/categories.html")
 	r.StaticFile("/map.html", "./public/map.html")
 	r.StaticFile("/albums.html", "./public/albums.html")
+	r.StaticFile("/admin-albums.html", "./public/admin-albums.html")
 	r.StaticFile("/test", "./test-frontend.html")
 	r.Static("/assets", "./public/assets")
 	

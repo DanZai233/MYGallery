@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>相册管理 - MYGallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <header class="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
+        <div class="px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="/admin" class="text-2xl hover:opacity-80">←</a>
+                <h1 class="text-xl font-bold text-gray-800">相册管理</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="showCreateModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">+ 新建相册</button>
+                <a href="/admin" class="px-4 py-2 text-gray-700 hover:text-blue-600 text-sm">返回管理</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-24 px-6 pb-12 max-w-6xl mx-auto">
+        <div id="loading" class="text-center py-12"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto"></div></div>
+        <div id="albums-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="empty" class="hidden text-center py-12"><div class="text-6xl mb-4">📂</div><p class="text-gray-500 mb-4">还没有创建任何相册</p><button onclick="showCreateModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">创建第一个相册</button></div>
+    </main>
+
+    <!-- 新建/编辑相册 -->
+    <div id="album-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-800" id="modal-title">新建相册</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form id="album-form" class="space-y-4">
+                <input type="hidden" id="album-id">
+                <div><label class="block text-gray-700 font-medium mb-2 text-sm">标题 *</label><input type="text" id="album-title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="相册标题"></div>
+                <div><label class="block text-gray-700 font-medium mb-2 text-sm">描述</label><textarea id="album-desc" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="相册描述"></textarea></div>
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeModal()" class="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">取消</button>
+                    <button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 管理照片 -->
+    <div id="photos-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-bold text-gray-800">管理照片 - <span id="pm-album-title"></span></h2>
+                <button onclick="closePhotosModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div class="p-4 border-b bg-gray-50">
+                <p class="text-sm text-gray-500 mb-2">点击照片可添加/移除（蓝色边框 = 已在相册中）</p>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div id="pm-grid" class="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2"></div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 flex justify-between items-center">
+                <span class="text-sm text-gray-500" id="pm-count">已添加 0 张</span>
+                <button onclick="closePhotosModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">完成</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API='/api';
+    let token=localStorage.getItem('admin_token');
+    if(!token)window.location.href='/admin';
+    let currentAlbumId=null,albumPhotoIds=new Set();
+
+    async function loadAlbums(){
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('albums-grid').classList.add('hidden');
+        document.getElementById('empty').classList.add('hidden');
+        try{
+            const r=await fetch(`${API}/albums`);const albums=await r.json();
+            if(!albums||albums.length===0){document.getElementById('empty').classList.remove('hidden');document.getElementById('loading').classList.add('hidden');return}
+            document.getElementById('albums-grid').innerHTML=albums.map(a=>`
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition">
+                    <div class="h-40 bg-gray-100 relative">
+                        ${a.cover_url?`<img src="${a.cover_url}" class="w-full h-full object-cover">`:`<div class="w-full h-full flex items-center justify-center text-4xl text-gray-300">📷</div>`}
+                        <span class="absolute top-2 right-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">${a.photo_count} 张</span>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-gray-800 mb-1">${a.title}</h3>
+                        <p class="text-sm text-gray-500 mb-3">${a.description||'暂无描述'}</p>
+                        <div class="flex gap-2">
+                            <button onclick="managePhotos(${a.id},'${a.title}')" class="flex-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs hover:bg-blue-100">🖼 管理照片</button>
+                            <button onclick="editAlbum(${a.id})" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-gray-200">编辑</button>
+                            <button onclick="deleteAlbum(${a.id},'${a.title}')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs hover:bg-red-100">删除</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+            document.getElementById('albums-grid').classList.remove('hidden');
+            document.getElementById('loading').classList.add('hidden');
+        }catch(e){document.getElementById('loading').innerHTML='<p class="text-red-500">加载失败</p>'}
+    }
+
+    function showCreateModal(){document.getElementById('modal-title').textContent='新建相册';document.getElementById('album-form').reset();document.getElementById('album-id').value='';document.getElementById('album-modal').classList.remove('hidden')}
+    function closeModal(){document.getElementById('album-modal').classList.add('hidden')}
+
+    async function editAlbum(id){
+        try{const r=await fetch(`${API}/albums/${id}`);const d=await r.json();
+        document.getElementById('modal-title').textContent='编辑相册';
+        document.getElementById('album-id').value=d.album.id;
+        document.getElementById('album-title').value=d.album.title;
+        document.getElementById('album-desc').value=d.album.description||'';
+        document.getElementById('album-modal').classList.remove('hidden')}catch(e){alert('加载失败')}
+    }
+
+    document.getElementById('album-form').addEventListener('submit',async(e)=>{
+        e.preventDefault();const id=document.getElementById('album-id').value;
+        const data={title:document.getElementById('album-title').value,description:document.getElementById('album-desc').value};
+        try{const r=await fetch(`${API}/albums${id?'/'+id:''}`,{method:id?'PUT':'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(data)});
+        if(r.ok){closeModal();loadAlbums()}else{const err=await r.json();alert(err.error||'操作失败')}}catch(e){alert('网络错误')}
+    });
+
+    async function deleteAlbum(id,name){if(!confirm(`确定删除相册"${name}"？\n（不会删除相册内的照片）`))return;
+        try{await fetch(`${API}/albums/${id}`,{method:'DELETE',headers:{'Authorization':`Bearer ${token}`}});loadAlbums()}catch(e){alert('删除失败')}}
+
+    // 管理照片
+    async function managePhotos(albumId,title){
+        currentAlbumId=albumId;albumPhotoIds.clear();
+        document.getElementById('pm-album-title').textContent=title;
+
+        // 获取相册现有照片
+        const ar=await fetch(`${API}/albums/${albumId}?size=1000`);const ad=await ar.json();
+        (ad.photos||[]).forEach(p=>albumPhotoIds.add(p.id));
+
+        // 获取所有照片
+        const pr=await fetch(`${API}/photos?size=1000`);const pd=await pr.json();
+        const photos=pd.photos||[];
+
+        document.getElementById('pm-grid').innerHTML=photos.map(p=>`
+            <div class="relative cursor-pointer rounded-lg overflow-hidden border-2 transition ${albumPhotoIds.has(p.id)?'border-blue-500 ring-2 ring-blue-200':'border-transparent hover:border-gray-300'}" onclick="togglePhotoInAlbum(${p.id},this)" data-pid="${p.id}">
+                <img src="${p.thumbnail_url||p.url}" class="w-full aspect-square object-cover">
+                ${albumPhotoIds.has(p.id)?'<div class="absolute top-1 right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>':''}
+            </div>`).join('');
+        updatePmCount();
+        document.getElementById('photos-modal').classList.remove('hidden');
+    }
+    function closePhotosModal(){document.getElementById('photos-modal').classList.add('hidden');loadAlbums()}
+
+    async function togglePhotoInAlbum(photoId,el){
+        if(albumPhotoIds.has(photoId)){
+            await fetch(`${API}/albums/${currentAlbumId}/photos/${photoId}`,{method:'DELETE',headers:{'Authorization':`Bearer ${token}`}});
+            albumPhotoIds.delete(photoId);
+            el.classList.remove('border-blue-500','ring-2','ring-blue-200');el.classList.add('border-transparent');
+            el.querySelector('.bg-blue-500')?.remove();
+        }else{
+            await fetch(`${API}/albums/${currentAlbumId}/photos`,{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({photo_ids:[photoId]})});
+            albumPhotoIds.add(photoId);
+            el.classList.remove('border-transparent');el.classList.add('border-blue-500','ring-2','ring-blue-200');
+            el.insertAdjacentHTML('beforeend','<div class="absolute top-1 right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>');
+        }
+        updatePmCount();
+    }
+    function updatePmCount(){document.getElementById('pm-count').textContent=`已添加 ${albumPhotoIds.size} 张`}
+
+    loadAlbums();
+    </script>
+</body>
+</html>

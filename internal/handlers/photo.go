@@ -326,16 +326,54 @@ func (h *PhotoHandler) UpdatePhoto(c *gin.Context) {
 	})
 }
 
-// DeletePhoto 删除照片
+// DeletePhoto 软删除照片（移入回收站，不删文件）
 func (h *PhotoHandler) DeletePhoto(c *gin.Context) {
 	id := c.Param("id")
-
 	var photo models.Photo
 	if err := database.GetDB().First(&photo, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{Error: "照片不存在"})
 		return
 	}
+	if err := database.GetDB().Delete(&photo).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "删除失败", Message: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "已移入回收站"})
+}
 
+// GetTrash 获取回收站照片列表
+func (h *PhotoHandler) GetTrash(c *gin.Context) {
+	var photos []models.Photo
+	database.GetDB().Unscoped().Where("deleted_at IS NOT NULL").Order("deleted_at DESC").Find(&photos)
+	stor := storage.GetStorage()
+	for i := range photos {
+		photos[i].URL = stor.GetURL(photos[i].StoragePath)
+		if photos[i].ThumbnailPath != "" {
+			photos[i].ThumbnailURL = stor.GetURL("thumbnails/" + photos[i].ThumbnailPath)
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"photos": photos, "total": len(photos)})
+}
+
+// RestorePhoto 从回收站恢复照片
+func (h *PhotoHandler) RestorePhoto(c *gin.Context) {
+	id := c.Param("id")
+	result := database.GetDB().Unscoped().Model(&models.Photo{}).Where("id = ? AND deleted_at IS NOT NULL", id).Update("deleted_at", nil)
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, models.ErrorResponse{Error: "照片不存在或未被删除"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "照片已恢复"})
+}
+
+// PermanentDelete 永久删除照片（从回收站彻底删除+删文件）
+func (h *PhotoHandler) PermanentDelete(c *gin.Context) {
+	id := c.Param("id")
+	var photo models.Photo
+	if err := database.GetDB().Unscoped().Where("id = ? AND deleted_at IS NOT NULL", id).First(&photo).Error; err != nil {
+		c.JSON(http.StatusNotFound, models.ErrorResponse{Error: "照片不存在"})
+		return
+	}
 	stor := storage.GetStorage()
 	stor.Delete(photo.StoragePath)
 	if photo.ThumbnailPath != "" {
@@ -344,17 +382,24 @@ func (h *PhotoHandler) DeletePhoto(c *gin.Context) {
 	if photo.LivePhotoPath != "" {
 		stor.Delete(photo.LivePhotoPath)
 	}
+	database.GetDB().Unscoped().Delete(&photo)
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "已永久删除"})
+}
 
-	if err := database.GetDB().Delete(&photo).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   "删除照片失败",
-			Message: err.Error(),
-		})
-		return
+// EmptyTrash 清空回收站
+func (h *PhotoHandler) EmptyTrash(c *gin.Context) {
+	var photos []models.Photo
+	database.GetDB().Unscoped().Where("deleted_at IS NOT NULL").Find(&photos)
+	stor := storage.GetStorage()
+	for _, p := range photos {
+		stor.Delete(p.StoragePath)
+		if p.ThumbnailPath != "" {
+			stor.Delete("thumbnails/" + p.ThumbnailPath)
+		}
+		if p.LivePhotoPath != "" {
+			stor.Delete(p.LivePhotoPath)
+		}
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "照片删除成功",
-	})
+	database.GetDB().Unscoped().Where("deleted_at IS NOT NULL").Delete(&models.Photo{})
+	c.JSON(http.StatusOK, gin.H{"success": true, "deleted": len(photos)})
 }

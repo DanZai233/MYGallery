@@ -128,6 +128,12 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			authRequired.POST("/photos", photoHandler.UploadPhoto)
 			authRequired.PUT("/photos/:id", photoHandler.UpdatePhoto)
 			authRequired.DELETE("/photos/:id", photoHandler.DeletePhoto)
+
+			// 回收站
+			authRequired.GET("/trash", photoHandler.GetTrash)
+			authRequired.POST("/trash/:id/restore", photoHandler.RestorePhoto)
+			authRequired.DELETE("/trash/:id", photoHandler.PermanentDelete)
+			authRequired.DELETE("/trash", photoHandler.EmptyTrash)
 			
 			// 设置管理
 			authRequired.PUT("/settings", settingsHandler.UpdateSettings)

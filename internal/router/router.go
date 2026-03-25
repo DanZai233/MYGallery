@@ -87,6 +87,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	settingsHandler := handlers.NewSettingsHandler(cfg)
 	reactionHandler := handlers.NewReactionHandler()
 	albumHandler := handlers.NewAlbumHandler()
+	commentHandler := handlers.NewCommentHandler()
 	
 	// API 路由组
 	api := r.Group("/api")
@@ -113,6 +114,10 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		api.POST("/photos/:id/reactions", reactionHandler.AddReaction)
 		api.DELETE("/photos/:id/reactions", reactionHandler.DeleteReaction)
 
+		// 评论（公开读写）
+		api.GET("/photos/:id/comments", commentHandler.GetComments)
+		api.POST("/photos/:id/comments", commentHandler.AddComment)
+
 		// 相册（公开读取）
 		api.GET("/albums", albumHandler.GetAlbums)
 		api.GET("/albums/:id", albumHandler.GetAlbum)
@@ -128,6 +133,12 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			authRequired.POST("/photos", photoHandler.UploadPhoto)
 			authRequired.PUT("/photos/:id", photoHandler.UpdatePhoto)
 			authRequired.DELETE("/photos/:id", photoHandler.DeletePhoto)
+
+			// 回收站
+			authRequired.GET("/trash", photoHandler.GetTrash)
+			authRequired.POST("/trash/:id/restore", photoHandler.RestorePhoto)
+			authRequired.DELETE("/trash/:id", photoHandler.PermanentDelete)
+			authRequired.DELETE("/trash", photoHandler.EmptyTrash)
 			
 			// 设置管理
 			authRequired.PUT("/settings", settingsHandler.UpdateSettings)
@@ -139,6 +150,9 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			authRequired.POST("/albums/:id/photos", albumHandler.AddPhotos)
 			authRequired.DELETE("/albums/:id/photos/:photoId", albumHandler.RemovePhoto)
 			
+			// 评论管理
+			authRequired.DELETE("/comments/:commentId", commentHandler.DeleteComment)
+
 			// 分类管理
 			authRequired.POST("/categories", settingsHandler.CreateCategory)
 			authRequired.PUT("/categories/:id", settingsHandler.UpdateCategory)

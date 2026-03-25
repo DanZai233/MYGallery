@@ -209,6 +209,14 @@
         </div>
     </div>
     <div class="toast" id="toast">链接已复制</div>
+    <!-- Keyboard shortcuts panel -->
+    <div id="shortcuts-panel" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center" onclick="this.style.display='none'">
+        <div style="background:rgba(23,23,23,.95);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px 32px;max-width:360px;color:#e5e5e5" onclick="event.stopPropagation()">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;text-align:center">快捷键</h3>
+            <div id="sk-list" style="display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13px"></div>
+            <p style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-top:16px">按 ESC 或点击空白处关闭</p>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -253,7 +261,18 @@
     function viewerPrev(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx-1+viewerPhotos.length)%viewerPhotos.length;showViewerPhoto();updateURL(viewerPhotos[viewerIdx]?.id)}
     function viewerNext(){if(viewerPhotos.length<2)return;viewerIdx=(viewerIdx+1)%viewerPhotos.length;showViewerPhoto();updateURL(viewerPhotos[viewerIdx]?.id)}
     function toggleInfoPanel(){infoPanelOpen=!infoPanelOpen;document.getElementById('info-panel').classList.toggle('open',infoPanelOpen);document.getElementById('viewer-info-btn').classList.toggle('active',infoPanelOpen)}
-    document.addEventListener('keydown',e=>{if(!document.getElementById('viewer').classList.contains('open'))return;if(e.key==='Escape')closeViewer();if(e.key==='ArrowLeft')viewerPrev();if(e.key==='ArrowRight')viewerNext();if(e.key==='i'||e.key==='I')toggleInfoPanel()});
+    const SHORTCUTS=[['←/→','上一张/下一张'],['I','切换信息面板'],['ESC','关闭查看器'],['D','下载原图'],['S','复制分享链接'],['?','显示快捷键']];
+    function showShortcuts(){const p=document.getElementById('shortcuts-panel');p.style.display=p.style.display==='flex'?'none':'flex';if(p.style.display==='flex'){document.getElementById('sk-list').innerHTML=SHORTCUTS.map(([k,d])=>`<kbd style="padding:3px 8px;background:rgba(255,255,255,.08);border-radius:6px;font-size:12px;font-family:monospace;text-align:center;color:#fff">${k}</kbd><span style="color:rgba(255,255,255,.6)">${d}</span>`).join('')}}
+    document.addEventListener('keydown',e=>{
+        if(e.key==='?'&&!e.target.matches('input,textarea')){showShortcuts();return}
+        if(e.key==='Escape'){document.getElementById('shortcuts-panel').style.display='none'}
+        if(!document.getElementById('viewer').classList.contains('open'))return;
+        if(e.target.matches('input,textarea'))return;
+        if(e.key==='Escape')closeViewer();if(e.key==='ArrowLeft')viewerPrev();if(e.key==='ArrowRight')viewerNext();
+        if(e.key==='i'||e.key==='I')toggleInfoPanel();
+        if(e.key==='d'||e.key==='D')downloadPhoto();
+        if(e.key==='s'||e.key==='S')sharePhoto();
+    });
 
     function updateURL(photoId){if(photoId)history.replaceState(null,'',`?photo=${photoId}`)}
 

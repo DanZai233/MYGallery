@@ -60,7 +60,17 @@ func (h *PhotoHandler) GetPhotos(c *gin.Context) {
 	}
 
 	query.Count(&total)
-	query.Offset(offset).Limit(size).Order("created_at DESC").Find(&photos)
+
+	sortBy := c.DefaultQuery("sort", "created_at")
+	sortOrder := c.DefaultQuery("order", "desc")
+	allowedSorts := map[string]bool{"created_at": true, "date_taken": true, "file_size": true, "views": true, "title": true}
+	if !allowedSorts[sortBy] {
+		sortBy = "created_at"
+	}
+	if sortOrder != "asc" {
+		sortOrder = "desc"
+	}
+	query.Offset(offset).Limit(size).Order(sortBy + " " + sortOrder).Find(&photos)
 
 	stor := storage.GetStorage()
 	for i := range photos {

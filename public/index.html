@@ -145,6 +145,13 @@
             <h1 class="t-dark">MYGallery</h1>
             <span class="count" id="photo-count">0 张照片</span>
             <div style="flex:1"></div>
+            <select onchange="changeSort(this.value)" class="cat-btn" style="appearance:none;padding-right:24px;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 fill=%27%23888%27%3E%3Cpath d=%27M2 4l4 4 4-4%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 8px center">
+                <option value="created_at:desc">最新上传</option>
+                <option value="date_taken:desc">最近拍摄</option>
+                <option value="views:desc">最多浏览</option>
+                <option value="file_size:desc">最大文件</option>
+                <option value="title:asc">标题 A-Z</option>
+            </select>
             <div id="category-filter" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
                 <button onclick="filterByCategory('')" class="cat-btn active">全部</button>
             </div>
@@ -198,7 +205,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-    const API='/api';let curPage=1,total=0,loading=false,allPhotos=[],curCat='',curSearch='',viewerIdx=0,viewerPhotos=[],infoPanelOpen=false,miniMap=null;
+    const API='/api';let curPage=1,total=0,loading=false,allPhotos=[],curCat='',curSearch='',curSort='created_at',curOrder='desc',viewerIdx=0,viewerPhotos=[],infoPanelOpen=false,miniMap=null;
     const isTouch='ontouchstart'in window;
 
     // Theme
@@ -209,6 +216,7 @@
 
     // Categories & Search
     async function loadCats(){try{const r=await fetch(`${API}/categories`);const c=await r.json();const el=document.getElementById('category-filter');el.innerHTML='<button onclick="filterByCategory(\'\')" class="cat-btn active">全部</button>'+c.map(x=>`<button onclick="filterByCategory('${x.name}')" class="cat-btn" data-cat="${x.name}">${x.name}</button>`).join('')+'<button onclick="toggleSearchBar()" class="cat-btn" style="opacity:.6">🔍</button>'}catch(e){}}
+    function changeSort(v){const[s,o]=v.split(':');curSort=s;curOrder=o;curPage=1;loadPhotos(1)}
     function filterByCategory(c){curCat=c;curPage=1;document.querySelectorAll('.cat-btn').forEach(b=>{b.classList.toggle('active',(c===''&&b.textContent.includes('全部'))||b.dataset.cat===c)});loadPhotos(1)}
     function toggleSearchBar(){const fb=document.getElementById('filter-bar');fb.style.display=fb.style.display==='none'?'flex':'none';if(fb.style.display==='flex')document.getElementById('search-input').focus()}
     let sTimer;function handleSearch(e){if(e.key==='Enter'){performSearch();return}clearTimeout(sTimer);sTimer=setTimeout(()=>{if(document.getElementById('search-input').value.trim().length>0)performSearch()},300)}
@@ -216,7 +224,7 @@
     function clearSearch(){document.getElementById('search-input').value='';curSearch='';loadPhotos(1)}
 
     // Photos
-    async function loadPhotos(page=1){if(loading)return;loading=true;try{let u=`${API}/photos?page=${page}&size=20`;if(curCat)u+=`&category=${encodeURIComponent(curCat)}`;if(curSearch)u+=`&search=${encodeURIComponent(curSearch)}`;const r=await fetch(u);if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();total=d.total;document.getElementById('photo-count').textContent=curCat?`${curCat} · ${total}`:curSearch?`搜索 · ${total}`:`${total} 张照片`;
+    async function loadPhotos(page=1){if(loading)return;loading=true;try{let u=`${API}/photos?page=${page}&size=20&sort=${curSort}&order=${curOrder}`;if(curCat)u+=`&category=${encodeURIComponent(curCat)}`;if(curSearch)u+=`&search=${encodeURIComponent(curSearch)}`;const r=await fetch(u);if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();total=d.total;document.getElementById('photo-count').textContent=curCat?`${curCat} · ${total}`:curSearch?`搜索 · ${total}`:`${total} 张照片`;
     if(d.photos?.length>0){allPhotos=page===1?d.photos:[...allPhotos,...d.photos];renderPhotos(d.photos,page===1);document.getElementById('photo-wall').style.display='';document.getElementById('loading').style.display='none';document.getElementById('empty-state').style.display='none';document.getElementById('load-more').style.display=(d.photos.length===20&&d.total>page*20)?'block':'none'}else if(page===1){document.getElementById('empty-state').style.display='block';document.getElementById('loading').style.display='none';document.getElementById('photo-wall').style.display='none'}}catch(e){document.getElementById('loading').innerHTML=`<div style="text-align:center;padding:40px"><p style="color:#ef4444;margin-bottom:12px">加载失败</p><button onclick="loadPhotos(1)" class="cat-btn">重试</button></div>`}finally{loading=false}}
 
     function renderPhotos(photos,replace){const w=document.getElementById('photo-wall');if(replace)w.innerHTML='';const f=document.createDocumentFragment();photos.forEach(p=>f.appendChild(mkCard(p)));w.appendChild(f);initLazy()}

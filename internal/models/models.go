@@ -128,6 +128,16 @@ type ReactionResponse struct {
 	UserReaction string            `json:"user_reaction"`
 }
 
+// Comment 照片评论模型
+type Comment struct {
+	ID        uint      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	PhotoID   uint      `gorm:"not null;index" json:"photo_id"`
+	Nickname  string    `gorm:"not null" json:"nickname"`
+	Content   string    `gorm:"type:text;not null" json:"content"`
+	IPAddress string    `json:"-"`
+}
+
 // LoginRequest 登录请求
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`

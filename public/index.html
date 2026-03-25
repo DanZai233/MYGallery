@@ -198,6 +198,13 @@
                 </div>
                 <div id="info-minimap" style="display:none"></div>
                 <div id="info-sections"></div>
+                <!-- Comments -->
+                <div class="info-section" id="comments-section">
+                    <div class="info-section-title">评论</div>
+                    <div id="comments-list" style="max-height:200px;overflow-y:auto;margin-bottom:10px"></div>
+                    <div style="display:flex;gap:6px;margin-bottom:6px"><input id="comment-nick" placeholder="昵称" style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:12px;outline:none" maxlength="50"></div>
+                    <div style="display:flex;gap:6px"><input id="comment-text" placeholder="写一条评论..." style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:12px;outline:none" maxlength="1000" onkeydown="if(event.key==='Enter')postComment()"><button onclick="postComment()" style="padding:6px 14px;border-radius:8px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:12px;cursor:pointer;white-space:nowrap">发送</button></div>
+                </div>
             </div>
         </div>
     </div>
@@ -265,7 +272,7 @@
     document.getElementById('info-desc').style.display=p.description?'':'none';
     document.querySelectorAll('.thumb-item').forEach((t,i)=>{t.classList.toggle('active',i===viewerIdx)});
     const at=document.querySelector('.thumb-item.active');if(at)at.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
-    buildInfoSections(p);buildMiniMap(p)}
+    buildInfoSections(p);buildMiniMap(p);loadComments()}
 
     function buildInfoSections(p){let h='';
     const basic=[];if(p.original_name)basic.push(r('📄','文件名',p.original_name));if(p.file_size)basic.push(r('💾','大小',fmtBytes(p.file_size)));if(p.width&&p.height){basic.push(r('📐','分辨率',`${p.width}×${p.height}`));basic.push(r('🔲','像素',`${(p.width*p.height/1e6).toFixed(1)} MP`))}if(p.date_taken)basic.push(r('📅','日期',new Date(p.date_taken).toLocaleString('zh-CN')));if(p.color_space)basic.push(r('🎨','色彩',p.color_space));if(p.software)basic.push(r('📱','软件',p.software));if(p.location)basic.push(r('📍','位置',p.location));if(p.gps_latitude&&p.gps_longitude)basic.push(r('🌐','GPS',fmtGPS(p.gps_latitude,p.gps_longitude)));if(basic.length)h+=sec('基本信息',basic.join(''));
@@ -306,6 +313,11 @@
     else{try{await fetch(`${API}/photos/${p.id}/reactions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reaction_type:type})});if(currentReactionData.userReaction){const old=currentReactionData.userReaction;currentReactionData.reactions[old]=Math.max(0,(currentReactionData.reactions[old]||1)-1)}currentReactionData.userReaction=type;currentReactionData.reactions[type]=(currentReactionData.reactions[type]||0)+1;renderReactionGrid();updateReactBtn()}catch(e){}}}
 
     function updateReactBtn(){const btn=document.getElementById('viewer-react');btn.classList.toggle('has-reaction',!!currentReactionData.userReaction)}
+
+    // === Comments ===
+    async function loadComments(){const p=viewerPhotos[viewerIdx];if(!p)return;try{const r=await fetch(`${API}/photos/${p.id}/comments`);const d=await r.json();const list=document.getElementById('comments-list');if(!d.comments||d.comments.length===0){list.innerHTML='<p style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:8px">暂无评论</p>';return}list.innerHTML=d.comments.map(c=>`<div style="margin-bottom:8px;padding:8px;background:rgba(255,255,255,.04);border-radius:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7)">${c.nickname}</span><span style="font-size:10px;color:rgba(255,255,255,.25)">${new Date(c.created_at).toLocaleDateString('zh-CN')}</span></div><p style="font-size:12px;color:rgba(255,255,255,.6);margin:0;word-break:break-word">${c.content}</p></div>`).join('')}catch(e){}}
+    async function postComment(){const p=viewerPhotos[viewerIdx];if(!p)return;const nick=document.getElementById('comment-nick').value.trim();const text=document.getElementById('comment-text').value.trim();if(!nick||!text)return;try{await fetch(`${API}/photos/${p.id}/comments`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nickname:nick,content:text})});document.getElementById('comment-text').value='';localStorage.setItem('comment_nick',nick);loadComments()}catch(e){}}
+    document.addEventListener('DOMContentLoaded',()=>{const saved=localStorage.getItem('comment_nick');if(saved)document.getElementById('comment-nick').value=saved});
 
     // Touch swipe
     let touchStartX=0;document.getElementById('viewer')?.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX},{passive:true});

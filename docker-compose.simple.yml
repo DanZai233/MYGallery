@@ -1,0 +1,31 @@
+# MYGallery Docker Compose 一键部署配置
+# 使用方法：
+#   1. 复制配置文件: cp config.example.yaml config.yaml
+#   2. 启动服务: docker compose -f docker-compose.simple.yml up -d
+#   3. 访问: http://localhost:8080
+
+services:
+  mygallery:
+    image: danzai233/mygallery:latest
+    container_name: mygallery
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    environment:
+      - TZ=${TZ:-Asia/Shanghai}
+    networks:
+      - mygallery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+networks:
+  mygallery-network:
+    driver: bridge

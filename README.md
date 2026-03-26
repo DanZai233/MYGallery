@@ -159,19 +159,185 @@ go run main.go
 
 ### Docker 部署
 
+#### 方式一：一键部署（推荐，使用预构建镜像）
+
+使用官方 Docker Hub 镜像，本地 SQLite 数据库，最简单快速。
+
 ```bash
+# 1. 克隆项目
+git clone https://github.com/danzai233/mygallery.git
+cd mygallery
+
+# 2. 复制配置文件
 cp config.example.yaml config.yaml
-docker compose build && docker compose up -d
+
+# 3. 启动服务
+docker compose -f docker-compose.simple.yml up -d
+
+# 4. 查看日志
+docker compose -f docker-compose.simple.yml logs -f
+```
+
+访问 http://localhost:8080，默认账号：`admin` / `admin123`。
+
+#### 方式二：Docker Compose 完整部署（可选 PostgreSQL + MinIO）
+
+使用 PostgreSQL 数据库和 MinIO 对象存储，适合生产环境。
+
+```bash
+# 1. 复制配置文件
+cp config.example.yaml config.yaml
+
+# 2. 编辑 docker-compose.full.yml，取消注释需要的服务（postgres/minio）
+
+# 3. 创建 .env 文件设置密码（可选）
+cat > .env <<EOF
+POSTGRES_PASSWORD=your_strong_password
+MINIO_ROOT_USER=your_minio_user
+MINIO_ROOT_PASSWORD=your_minio_password
+TZ=Asia/Shanghai
+EOF
+
+# 4. 启动服务
+docker compose -f docker-compose.full.yml up -d
+```
+
+如果启用了 PostgreSQL，需要修改 `config.yaml`：
+
+```yaml
+database:
+  type: "postgres"
+  postgres:
+    host: "postgres"          # Docker Compose 网络中的服务名
+    port: 5432
+    username: "mygallery"
+    password: "your_strong_password"
+    database: "mygallery"
+    sslmode: "disable"
+```
+
+如果启用了 MinIO，需要修改 `config.yaml`：
+
+```yaml
+storage:
+  type: "minio"
+  minio:
+    endpoint: "minio:9000"   # Docker Compose 网络中的服务名
+    bucket: "mygallery"
+    access_key: "your_minio_user"
+    secret_key: "your_minio_password"
+    use_ssl: false
+    url_prefix: "http://localhost:9000/mygallery"
+```
+
+首次启动 MinIO 后，需要通过 http://localhost:9001 进入控制台手动创建 bucket。
+
+#### 方式三：自定义镜像构建
+
+如果需要自定义构建（例如修改源码）：
+
+```bash
+# 构建镜像
+docker build -t mygallery:custom .
+
+# 运行容器
+docker run -d \
+  --name mygallery \
+  -p 8080:8080 \
+  -v $(pwd)/config.yaml:/app/config.yaml:ro \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/uploads:/app/uploads \
+  -e TZ=Asia/Shanghai \
+  mygallery:custom
+```
+
+##### 自动化构建和发布
+
+项目配置了 GitHub Actions，支持自动构建和发布 Docker 镜像：
+
+- **触发条件**：推送带有 `v*.*.*` 格式的 tag 时自动构建（如 `v1.1.5`）
+- **支持平台**：`linux/amd64` 和 `linux/arm64`
+- **镜像仓库**：[Docker Hub](https://hub.docker.com/r/danzai233/mygallery)
+
+手动发布新版本：
+
+```bash
+# 使用 Makefile
+make docker-login  # 登录 Docker Hub
+make docker-build-multi-push VERSION=v1.1.5
+
+# 或使用发布脚本
+./scripts/publish-docker.sh v1.1.5
+```
+
+#### Docker 部署常用命令
+
+```bash
+# 查看容器状态
+docker compose -f docker-compose.simple.yml ps
+
+# 查看日志
+docker compose -f docker-compose.simple.yml logs -f
+
+# 停止服务
+docker compose -f docker-compose.simple.yml stop
+
+# 启动服务
+docker compose -f docker-compose.simple.yml start
+
+# 重启服务
+docker compose -f docker-compose.simple.yml restart
+
+# 停止并删除容器
+docker compose -f docker-compose.simple.yml down
+
+# 停止并删除容器及数据卷（慎用，会删除所有数据）
+docker compose -f docker-compose.simple.yml down -v
+
+# 进入容器调试
+docker exec -it mygallery sh
+
+# 更新镜像到最新版本
+docker pull danzai233/mygallery:latest
+docker compose -f docker-compose.simple.yml up -d
+```
+
+#### Docker 数据持久化
+
+以下目录通过 volume 挂载持久化数据：
+
+- `./data` - SQLite 数据库文件（如果使用 SQLite）
+- `./uploads` - 上传的图片和缩略图
+- `./config.yaml` - 配置文件（建议使用 `:ro` 只读挂载）
+
+**备份重要数据**：
+
+```bash
+# 备份数据
+tar -czf mygallery-backup-$(date +%Y%m%d).tar.gz data/ uploads/ config.yaml
+
+# 恢复数据
+tar -xzf mygallery-backup-20240326.tar.gz
 ```
 
 ### Makefile
 
 ```bash
-make help    # 所有命令
-make run     # 运行
-make build   # 编译
-make test    # 测试
-make dev     # 热重载
+make help                      # 显示所有命令
+make run                       # 运行应用
+make build                     # 编译应用
+make test                      # 运行测试
+make dev                       # 热重载开发模式
+
+# Docker 相关命令
+make docker-build              # 构建 Docker 镜像
+make docker-build-multi        # 构建多平台镜像
+make docker-build-multi-push   # 构建并推送多平台镜像
+make docker-login              # 登录 Docker Hub
+make docker-up-simple          # 启动简化版部署
+make docker-up-full            # 启动完整版部署
+make docker-down-simple        # 停止简化版部署
+make docker-logs-simple        # 查看简化版日志
 ```
 
 ---
@@ -469,6 +635,64 @@ app:
 | DELETE | `/api/photos/:id` | 删除照片 |
 | POST | `/api/categories` | 创建分类 |
 | PUT / DELETE | `/api/categories/:id` | 更新 / 删除分类 |
+
+---
+
+## 🐳 Docker 部署
+
+### 快速开始
+
+#### 最简配置（SQLite + 本地存储）
+
+```bash
+git clone https://github.com/danzai233/mygallery.git
+cd mygallery
+cp config.example.yaml config.yaml
+docker compose -f docker-compose.simple.yml up -d
+```
+
+访问 http://localhost:8080，默认账号：`admin` / `admin123`。
+
+### 多种部署模式
+
+| 配置文件 | 数据库 | 存储 | 适用场景 |
+|---------|-------|------|---------|
+| `docker-compose.simple.yml` | SQLite | 本地 | 个人部署、开发环境 |
+| `docker-compose.full.yml` | PostgreSQL | MinIO | 生产环境、高并发 |
+
+### 环境变量
+
+在 `.env` 文件中配置（可选）：
+
+```bash
+# 时区
+TZ=Asia/Shanghai
+
+# PostgreSQL 配置（仅完整模式）
+POSTGRES_PASSWORD=your_strong_password
+
+# MinIO 配置（仅完整模式）
+MINIO_ROOT_USER=your_minio_user
+MINIO_ROOT_PASSWORD=your_minio_password
+```
+
+### 多平台支持
+
+官方镜像支持以下架构：
+
+- `linux/amd64`
+- `linux/arm64` (Apple Silicon / ARM 服务器)
+- `linux/arm/v7` (树莓派等 ARM 设备)
+
+无需额外配置，Docker 会自动选择合适架构的镜像。
+
+### 健康检查
+
+容器内置健康检查，可通过以下命令查看：
+
+```bash
+docker inspect mygallery --format='{{.State.Health.Status}}'
+```
 
 ---
 

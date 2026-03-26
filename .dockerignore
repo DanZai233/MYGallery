@@ -1,10 +1,19 @@
 # Git
 .git
 .gitignore
+.gitattributes
 
 # 文档
 *.md
 !README.md
+docs/
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.simple.yml
+docker-compose.full.yml
+.dockerignore
 
 # 数据和上传
 data/
@@ -14,19 +23,42 @@ config.yaml
 # 构建产物
 mygallery
 bin/
+dist/
 
 # 临时文件
 *.log
 *.tmp
 /tmp/
+temp/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# OS
+# 操作系统
 .DS_Store
+Thumbs.db
 
 # 测试文件
 test-frontend.html
 *.txt
+scripts/
+
+# 依赖
+vendor/
+
+# Node (如果有)
+node_modules/
+package-lock.json
+
+# 环境变量
+.env
+.env.*
+
+# 证书和密钥
+*.pem
+*.key
+*.crt

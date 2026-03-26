@@ -1,3 +1,9 @@
+# MYGallery 完整 Docker Compose 配置（可选 PostgreSQL + MinIO）
+# 使用方法：
+#   1. 根据需要取消注释相关服务
+#   2. 修改环境变量和密码
+#   3. 启动服务: docker compose -f docker-compose.full.yml up -d
+
 services:
   mygallery:
     build:
@@ -9,68 +15,70 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./config.yaml:/app/config.yaml
+      - ./config.yaml:/app/config.yaml:ro
       - ./data:/app/data
       - ./uploads:/app/uploads
     environment:
-      - TZ=Asia/Shanghai
+      - TZ=${TZ:-Asia/Shanghai}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - mygallery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: mygallery-frontend
+  # 可选：使用 PostgreSQL 数据库（取消注释以启用）
+  postgres:
+    image: postgres:15-alpine
+    container_name: mygallery-postgres
     restart: unless-stopped
     environment:
-      NITRO_PORT: 3000
-      NITRO_HOST: 0.0.0.0
-      NUXT_SESSION_PASSWORD: changeme-32-characters!
-      NUXT_STORAGE_PROVIDER: local
-      NUXT_PROVIDER_LOCAL_PATH: /app/data/storage
-      NUXT_PROVIDER_LOCAL_BASE_URL: /storage
-      API_BASE_URL: http://mygallery:8080
-      EXTERNAL_BACKEND: "true"
-    ports:
-      - "3000:3000"
+      POSTGRES_DB: mygallery
+      POSTGRES_USER: mygallery
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mygallery_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./uploads:/app/data/storage
-    depends_on:
-      - mygallery
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     networks:
       - mygallery-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mygallery"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  # 可选：使用 PostgreSQL 数据库
-  # postgres:
-  #   image: postgres:15-alpine
-  #   container_name: mygallery-postgres
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_DB: mygallery
-  #     POSTGRES_USER: mygallery
-  #     POSTGRES_PASSWORD: your_password_here
-  #   volumes:
-  #     - postgres-data:/var/lib/postgresql/data
-  #   networks:
-  #     - mygallery-network
-
-  # 可选：使用 MinIO 对象存储
-  # minio:
-  #   image: minio/minio:latest
-  #   container_name: mygallery-minio
-  #   restart: unless-stopped
-  #   command: server /data --console-address ":9001"
-  #   ports:
-  #     - "9000:9000"
-  #     - "9001:9001"
-  #   environment:
-  #     MINIO_ROOT_USER: minioadmin
-  #     MINIO_ROOT_PASSWORD: minioadmin
-  #   volumes:
-  #     - minio-data:/data
-  #   networks:
-  #     - mygallery-network
+  # 可选：使用 MinIO 对象存储（取消注释以启用）
+  minio:
+    image: minio/minio:latest
+    container_name: mygallery-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    networks:
+      - mygallery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 networks:
   mygallery-network:
@@ -78,5 +86,7 @@ networks:
 
 volumes:
   postgres-data:
+    driver: local
   minio-data:
+    driver: local
 

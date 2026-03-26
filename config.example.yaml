@@ -1,5 +1,22 @@
 # MYGallery 配置文件示例
 # 复制此文件为 config.yaml 并根据需要修改
+#
+# Docker 部署说明：
+# 1. 复制此文件为 config.yaml
+# 2. 根据部署模式修改数据库和存储配置
+# 3. 简单部署（docker-compose.simple.yml）使用 SQLite + 本地存储，无需修改
+# 4. 完整部署（docker-compose.full.yml）可使用 PostgreSQL + MinIO，需取消注释相应配置
+#
+# 数据库选择：
+# - SQLite：默认，零依赖，适合个人和小规模部署
+# - PostgreSQL：适合高并发和大规模部署
+# - MySQL：兼容性好，适合传统数据库环境
+#
+# 存储选择：
+# - 本地存储：默认，简单快速
+# - MinIO：自建对象存储，适合需要高可用的场景
+# - S3：AWS 或兼容 S3 的云存储
+# - 阿里云 OSS：国内云存储
 
 # 服务器配置
 server:
